@@ -1,0 +1,1 @@
+export const selectActiveStep  = (state) => state.stepInfo.activeStep

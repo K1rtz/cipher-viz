@@ -1,8 +1,23 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-
+import { useSelector } from 'react-redux';
+import { selectActiveStep } from './../store/selectors/stepInfoSelector.js';
 export default function MatrixDisplay({ rows = 7, cols = 7, tiles = [] }) {
-  /* ---------- INIT DATA ---------- */
+
+  const activeStep = useSelector(selectActiveStep);
+  useEffect(() => {
+    // if(activeStep === 1){
+    //   handleAnimateColumns()
+    // }
+    // if(activeStep === 2){
+    //   handleAnimateRows()
+    // }
+  }, [activeStep]);
+
+
+
+
+
   const defaultTiles = Array.from({ length: rows * cols }, (_, i) => ({
     id: i,
     value: String.fromCharCode(65 + (i % 26)),
