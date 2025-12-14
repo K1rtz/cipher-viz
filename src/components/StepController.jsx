@@ -1,4 +1,7 @@
 import React, {useState} from 'react';
+import { useSelector, useDispatch } from 'react-redux'
+import { selectActiveStep } from './../store/selectors/stepInfoSelector.js'
+import { setActiveStep } from './../store/reducers/stepInfoReducer'
 
 export default function StepController() {
   const steps = [
@@ -6,15 +9,21 @@ export default function StepController() {
     { id: 2, title: 'First Transposition', description: 'Rows are reordered based on the first password.' },
     { id: 3, title: 'Second Transposition', description: 'Columns are reordered based on the second password.' },
   ];
+  const dispatch = useDispatch()
 
-  const [currentStep, setCurrentStep] = useState(0);
+  const currentStep = useSelector(selectActiveStep)
+
+
 
   const handlePrevious = () => {
-    if (currentStep > 0) setCurrentStep(currentStep - 1);
+    if (currentStep > 0)
+      dispatch(setActiveStep(currentStep - 1))
+
   };
 
   const handleNext = () => {
-    if (currentStep < steps.length - 1) setCurrentStep(currentStep + 1);
+    if (currentStep < steps.length - 1)
+    dispatch(setActiveStep(currentStep + 1))
   };
 
   return (
