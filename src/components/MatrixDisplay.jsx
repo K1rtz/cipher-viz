@@ -1,36 +1,43 @@
 import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { useSelector } from 'react-redux';
-import { selectActiveStep } from './../store/selectors/stepInfoSelector.js';
-export default function MatrixDisplay({ rows = 7, cols = 7, tiles = [] }) {
+import { selectActiveStep, selectPlainText, selectRowKey, selectColumnKey, selectNextSubstepSignal, selectRowsInfo,  } from './../store/selectors/stepInfoSelector.js';
+
+export default function MatrixDisplay({ rows = 7, cols = 7 }) {
 
   const activeStep = useSelector(selectActiveStep);
-  useEffect(() => {
-    // if(activeStep === 1){
-    //   handleAnimateColumns()
-    // }
-    // if(activeStep === 2){
-    //   handleAnimateRows()
-    // }
-  }, [activeStep]);
+  const [prevStep, setPrevStep] = useState(useSelector(selectActiveStep));
 
+  const plainText = useSelector(selectPlainText);
+  const rowKey = useSelector(selectRowKey);
+  const columnKey = useSelector(selectColumnKey);
+  const nextSubstep = useSelector(selectNextSubstepSignal);
 
-
-
-
-  const defaultTiles = Array.from({ length: rows * cols }, (_, i) => ({
-    id: i,
-    value: String.fromCharCode(65 + (i % 26)),
-  }));
-
+  // Inicijalni tiles sa stabilnim colId
   const [matrixRows, setMatrixRows] = useState(
     Array.from({ length: rows }, (_, r) => ({
-      id: r,
-      tiles: tiles.length === rows * cols
-        ? tiles.slice(r * cols, (r + 1) * cols).map((t, i) => ({ id: r*cols+i, value: t }))
-        : defaultTiles.slice(r * cols, (r + 1) * cols),
+      rowId: r, // stabilan ID reda
+      tiles: Array.from({ length: cols }, (_, c) => ({
+        id: r * cols + c,
+        colId: c, // stabilan ID kolone
+        value: 'S',
+      })),
     }))
   );
+
+  const rowsInfo = useSelector(selectRowsInfo);
+
+  useEffect(() => {
+    console.log('rowsInfo')
+    console.log(rowsInfo.substeps[rowsInfo.currentStep]);
+
+    if(rowsInfo.substeps.length > 2){
+      const permutation = rowsInfo.substeps[rowsInfo.currentStep].join('')
+      console.log('permutation', permutation)
+      handleAnimateRows(permutation)
+    }
+
+  },[nextSubstep])
 
   const [columnHeaders, setColumnHeaders] = useState(
     Array.from({ length: cols }, (_, i) => ({ id: i, label: i }))
@@ -40,64 +47,76 @@ export default function MatrixDisplay({ rows = 7, cols = 7, tiles = [] }) {
     Array.from({ length: rows }, (_, i) => ({ id: i, label: i }))
   );
 
-  /* ---------- HANDLERS ---------- */
+  const [columnOrder, setColumnOrder] = useState(Array.from({ length: cols }, (_, i) => i));
+  const [rowOrder, setRowOrder] = useState(Array.from({ length: rows }, (_, i) => i));
 
-  // Permutacija kolona
-  const handleAnimateColumns = () => {
-    const permutation = [6, 5, 4, 3, 2, 1, 0];
-
-    // Headeri kolona
-    setColumnHeaders(prev => permutation.map(i => prev[i]));
-
-    // Tile-ovi po kolonama u svakom redu
+  // Popunjavanje matrice tekstom
+  useEffect(() => {
+    const filler = ' ';
     setMatrixRows(prev =>
       prev.map(row => ({
         ...row,
-        tiles: permutation.map(i => row.tiles[i]),
+        tiles: row.tiles.map(tile => ({
+          ...tile,
+          value: tile.id < plainText.length ? plainText[tile.id] : filler,
+        })),
+      }))
+    );
+  }, [plainText]);
+
+  // Permutacija kolona (uvek referencira inicijalne kolone)
+  const handleAnimateColumns = (key) => {
+    const targetOrder = key.split('').map(Number);
+    setColumnOrder(targetOrder);
+
+    setColumnHeaders(targetOrder.map(i => ({ id: i, label: i })));
+
+    setMatrixRows(prev =>
+      prev.map(row => ({
+        ...row,
+        tiles: targetOrder.map(colId => row.tiles.find(t => t.colId === colId)),
       }))
     );
   };
 
-  // Permutacija redova
-  const handleAnimateRows = () => {
-    const permutation = [6, 5, 4, 3, 2, 1, 0];
+  // Permutacija redova (uvek referencira inicijalne redove)
+  const handleAnimateRows = (key) => {
+    const targetOrder = key.split('').map(Number);
+    setRowOrder(targetOrder);
 
-    // Headeri redova
-    setRowHeaders(prev => permutation.map(i => prev[i]));
+    setRowHeaders(targetOrder.map(i => ({ id: i, label: i })));
 
-    // Redovi
-    setMatrixRows(prev => permutation.map(i => prev[i]));
+    setMatrixRows(prev =>
+      targetOrder.map(rowId => prev.find(r => r.rowId === rowId))
+    );
   };
+
+  // Na promenu koraka
+  useEffect(() => {
+    if (prevStep < activeStep) {
+      if (activeStep === 2) handleAnimateRows(rowKey);
+      else if (activeStep === 3) handleAnimateColumns(columnKey);
+    } else if (prevStep > activeStep) {
+      if (activeStep === 2) handleAnimateColumns('6543210');
+      else if (activeStep === 1) handleAnimateRows('6543210');
+    }
+    setPrevStep(activeStep);
+  }, [activeStep]);
+
+
 
   /* ---------- RENDER ---------- */
   return (
     <div className="flex flex-col items-center p-6">
-      <div className="flex mb-4">
-        <button
-          onClick={handleAnimateColumns}
-          className="w-14 h-14 bg-red-300 rounded-lg mr-4"
-        >
-          ▶
-        </button>
-        <button
-          onClick={handleAnimateRows}
-          className="w-14 h-14 bg-blue-300 rounded-lg"
-        >
-          ⇅
-        </button>
-      </div>
-
       <div className="w-full max-w-4xl">
         <div className="bg-gray-900/80 backdrop-blur-md border border-gray-700/50 rounded-2xl p-6 shadow-xl">
           <h3 className="text-xl font-bold text-white mb-4 text-center">
-            Matrix Visualization
+            DT Matrix
           </h3>
 
           <div
             className="grid gap-2 justify-center"
-            style={{
-              gridTemplateColumns: `64px repeat(${cols}, 64px)`,
-            }}
+            style={{ gridTemplateColumns: `64px repeat(${cols}, 64px)` }}
           >
             {/* Top-left corner */}
             <div />
@@ -117,7 +136,7 @@ export default function MatrixDisplay({ rows = 7, cols = 7, tiles = [] }) {
 
             {/* Rows */}
             {matrixRows.map((row, r) => (
-              <React.Fragment key={row.id}>
+              <React.Fragment key={row.rowId}>
                 {/* Row header */}
                 <motion.div
                   layout
@@ -128,16 +147,20 @@ export default function MatrixDisplay({ rows = 7, cols = 7, tiles = [] }) {
                   {rowHeaders[r].label}
                 </motion.div>
 
-                {/* Tile-ovi u ovom redu */}
+                {/* Tiles */}
                 {row.tiles.map(tile => (
                   <motion.div
                     key={tile.id}
                     layout
                     transition={{ type: 'spring', stiffness: 120, damping: 20 }}
-                    className="flex items-center justify-center rounded-lg bg-gray-800 text-white font-mono text-lg border border-gray-700/50"
+                    className={`flex items-center justify-center rounded-lg font-mono text-xl border transition-colors duration-300 ease-out border-gray-700/50 ${
+                      tile.value === ' ' && activeStep === 0
+                        ? 'bg-gray-800/50 text-gray-600'
+                        : 'bg-blue-600/60 text-white border-blue-400 shadow-md'
+                    }`}
                     style={{ width: 64, height: 64 }}
                   >
-                    {tile.value}
+                    {tile.value === ' ' ? 'X' : tile.value}
                   </motion.div>
                 ))}
               </React.Fragment>
@@ -145,7 +168,7 @@ export default function MatrixDisplay({ rows = 7, cols = 7, tiles = [] }) {
           </div>
 
           <div className="mt-4 text-sm text-gray-400 text-center">
-            Visual representation of the double transposition cipher
+            {/* Visual representation of the double transposition cipher */}
           </div>
         </div>
       </div>

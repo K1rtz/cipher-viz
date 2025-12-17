@@ -1,1 +1,9 @@
 export const selectActiveStep  = (state) => state.stepInfo.activeStep
+export const selectPlainText = (state) => state.stepInfo.plainText
+export const selectRowKey = (state) => state.stepInfo.rowKey
+export const selectColumnKey = (state) => state.stepInfo.columnKey
+export const selectNextSubstepSignal = (state) => state.stepInfo.nextSubstepSignal
+export const selectRowsInfo = (state) => state.stepInfo.rowsInfo
+export const selectColumnsInfo = (state) => state.stepInfo.columnsInfo
+export const selectRowsCurrentStep = (state) => state.stepInfo.rowsInfo.currentStep
+export const selectRowsSubsteps = (state) => state.stepInfo.rowsInfo.substeps
