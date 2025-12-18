@@ -7,9 +7,11 @@ import {
   selectRowKey,
   selectNextSubstepSignal,
   selectRowsCurrentStep,
-  selectRowsSubsteps
+  selectRowsSubsteps,
+  selectColumnsCurrentStep,
+  selectColumnsSubsteps,
 } from './../store/selectors/stepInfoSelector.js'
-import { setActiveStep, setPlainText, setRowKey, setColumnKey, setNextSubstepSignal, setRowsSubsteps, setRowsCurrentStep} from './../store/reducers/stepInfoReducer'
+import { setActiveStep, setPlainText, setRowKey, setColumnKey, setRowsSubsteps, setRowsCurrentStep, setRowsAdvanceNext, setColumnsCurrentStep, setColumnsSubsteps, setColumnsAdvanceNext} from './../store/reducers/stepInfoReducer'
 import { BiSolidRightArrow } from "react-icons/bi";
 import { BiSolidLeftArrow } from "react-icons/bi";
 import { TbPlayerTrackPrevFilled } from "react-icons/tb";
@@ -45,6 +47,9 @@ export default function StepController() {
   const dispatch = useDispatch()
   const rowsCurrentStep = useSelector(selectRowsCurrentStep)
   const rowsSubsteps = useSelector(selectRowsSubsteps)
+  const columnsCurrentStep = useSelector(selectColumnsCurrentStep)
+  const columnsSubsteps = useSelector(selectColumnsSubsteps)
+
 
   const currentStep = useSelector(selectActiveStep)
   const plainText = useSelector(selectPlainText)
@@ -52,10 +57,10 @@ export default function StepController() {
   const columnKey = useSelector(selectColumnKey)
   const nextSubstepSignal = useSelector(selectNextSubstepSignal)
 
+
   const handlePrevious = () => {
     if (currentStep > 0)
       dispatch(setActiveStep(currentStep - 1))
-
   };
 
   function generateSubsteps(key) {
@@ -86,6 +91,16 @@ export default function StepController() {
     console.log(substeps);
     dispatch(setRowsSubsteps(substeps))
     dispatch(setRowsCurrentStep(0))
+    dispatch(setRowsAdvanceNext(true))
+  }
+
+  const handleGenerateColumnSubsteps = () =>{
+    if(!columnKey || columnKey.length === 0) return
+    const substeps = generateSubsteps(columnKey)
+
+    dispatch(setColumnsSubsteps(substeps))
+    dispatch(setColumnsCurrentStep(0))
+    dispatch(setColumnsAdvanceNext(true))
   }
 
   const handleNext = () => {
@@ -128,78 +143,17 @@ export default function StepController() {
         </div>
       </div>
       <p className="text-gray-300 text-sm leading-relaxed">{steps[currentStep].description}</p>
-      {/*<p className='text-gray-300 mt-4 text-sm py-1'>{steps[currentStep].keyText}</p>*/}
       <input type='text'
              maxLength={49}
              value={plainText}
              onChange={(e) => dispatch(setPlainText(e.target.value.toUpperCase())) }
              className={`text-gray-300 bg-gray-700/50 w-full uppercase mt-2  ${currentStep === 0 ? 'flex' : 'hidden'} rounded-[4px] px-2 py-1 text-sm leading-relaxed `}></input>
-      <input type='text'
-             maxLength={7}
-             value={rowKey}
-             onChange={(e) => dispatch(setRowKey(e.target.value))}
-             className={`text-gray-300 bg-gray-700/50 w-full uppercase mt-2 ${currentStep === 1 ? 'flex' : 'hidden'} rounded-[4px] px-2 py-1 text-sm leading-relaxed `}></input>
+
       <div
-        className={`flex items-center gap-2 mt-2 ${
+        className={`flex items-center gap-2 mt-4 ${
           currentStep === 1 ? 'flex' : 'hidden'
         }`}
       >
-        {/* ⏮ Start */}
-        <button
-          className="px-2 py-[6px] rounded bg-gray-700 text-gray-200 hover:bg-gray-600"
-          onClick={() =>{
-            console.log(rowsCurrentStep);
-            if(rowsCurrentStep !== 0) {
-              dispatch(setRowsCurrentStep(0))
-              dispatch(setNextSubstepSignal(!nextSubstepSignal))
-            }
-          }}
-        >
-          <TbPlayerTrackPrevFilled />
-        </button>
-
-        {/* ◀ Previous */}
-        <button
-          className="px-2 py-[6px] rounded bg-gray-700 text-gray-200 hover:bg-gray-600"
-          onClick={() =>{
-            console.log(rowsCurrentStep);
-            if(rowsCurrentStep > 0) {
-              dispatch(setRowsCurrentStep(rowsCurrentStep - 1))
-              dispatch(setNextSubstepSignal(!nextSubstepSignal))
-            }
-          }}>
-          <BiSolidLeftArrow/>
-        </button>
-
-        {/* ▶ Next */}
-        <button
-          className="px-2 py-[6px] rounded bg-gray-700 text-gray-200 hover:bg-gray-600"
-          onClick={() =>{
-            console.log(rowsCurrentStep);
-            if(rowsCurrentStep < rowsSubsteps.length-1) {
-              dispatch(setRowsCurrentStep(rowsCurrentStep + 1))
-              dispatch(setNextSubstepSignal(!nextSubstepSignal))
-            }
-          }}>
-          <BiSolidRightArrow />
-
-        </button>
-
-        {/* ⏭ End */}
-        <button
-          className="px-2 py-[6px] rounded bg-gray-700 text-gray-200 hover:bg-gray-600"
-          onClick={() =>{
-            console.log(rowsCurrentStep);
-            if(rowsCurrentStep < rowsSubsteps.length) {
-              dispatch(setRowsCurrentStep(rowsSubsteps.length -1))
-              dispatch(setNextSubstepSignal(!nextSubstepSignal))
-            }
-          }}
-        >
-          <TbPlayerTrackNextFilled />
-        </button>
-
-        {/* Input */}
         <input
           type="text"
           maxLength={7}
@@ -208,20 +162,152 @@ export default function StepController() {
           className="flex-1 text-gray-300 bg-gray-700/50 rounded px-2 py-1 text-sm"
         />
 
-        {/* Confirm */}
         <button
-          className="px-3 py-[2px] rounded bg-blue-600 text-white hover:bg-blue-500"
+          className="px-3 text-sm py-[4px] rounded bg-blue-600 text-white hover:bg-blue-500"
           onClick={handleGenerateRowSubsteps}
         >
-          Confirm
+          Potvrdi
         </button>
+        <button
+          className="px-2 py-[6px] rounded bg-gray-700 text-gray-200 hover:bg-gray-600"
+          onClick={() =>{
+            console.log(rowsCurrentStep);
+            if(rowsCurrentStep !== 0) {
+              dispatch(setRowsCurrentStep(0))
+              // dispatch(setNextSubstepSignal(!nextSubstepSignal))
+              dispatch(setRowsAdvanceNext(true))
+
+            }
+
+          }}
+        >
+          <TbPlayerTrackPrevFilled />
+        </button>
+
+        <button
+          className="px-2 py-[6px] rounded bg-gray-700 text-gray-200 hover:bg-gray-600"
+          onClick={() =>{
+            console.log(rowsCurrentStep);
+            if(rowsCurrentStep > 0) {
+              dispatch(setRowsCurrentStep(rowsCurrentStep - 1))
+              // dispatch(setNextSubstepSignal(!nextSubstepSignal))
+              dispatch(setRowsAdvanceNext(true))
+
+            }
+          }}>
+          <BiSolidLeftArrow/>
+        </button>
+
+        <button
+          className="px-2 py-[6px] rounded bg-gray-700 text-gray-200 hover:bg-gray-600"
+          onClick={() =>{
+            console.log(rowsCurrentStep);
+            if(rowsCurrentStep < rowsSubsteps.length-1) {
+              dispatch(setRowsCurrentStep(rowsCurrentStep + 1))
+              // dispatch(setNextSubstepSignal(!nextSubstepSignal))
+              dispatch(setRowsAdvanceNext(true))
+            }
+          }}>
+          <BiSolidRightArrow />
+
+        </button>
+
+        <button
+          className="px-2 py-[6px] rounded bg-gray-700 text-gray-200 hover:bg-gray-600"
+          onClick={() =>{
+            console.log(rowsCurrentStep);
+            if(rowsCurrentStep < rowsSubsteps.length) {
+              dispatch(setRowsCurrentStep(rowsSubsteps.length -1))
+              dispatch(setRowsAdvanceNext(true))
+            }
+          }}
+        >
+          <TbPlayerTrackNextFilled />
+        </button>
+
+
       </div>
 
-      <input type='text'
-             maxLength={7}
-             value={columnKey}
-             onChange={(e) => dispatch(setColumnKey(e.target.value))}
-             className={`text-gray-300 bg-gray-700/50 w-full uppercase  mt-2 ${currentStep === 2 ? 'flex' : 'hidden'} rounded-[4px] px-2 py-1 text-sm leading-relaxed `}></input>
+
+      <div
+        className={`flex items-center gap-2 mt-4 ${
+          currentStep === 2 ? 'flex' : 'hidden'
+        }`}
+      >
+        <input
+          type="text"
+          maxLength={7}
+          value={columnKey}
+          onChange={(e) =>{
+            console.log('typed:', e.target.value)
+            dispatch(setColumnKey(e.target.value))}}
+          className="flex-1 text-gray-300 bg-gray-700/50 rounded px-2 py-1 text-sm"
+        />
+
+        <button
+          className="px-3 text-sm py-[4px] rounded bg-blue-600 text-white hover:bg-blue-500"
+          onClick={handleGenerateColumnSubsteps}
+        >
+          Potvrdi
+        </button>
+        <button
+          className="px-2 py-[6px] rounded bg-gray-700 text-gray-200 hover:bg-gray-600"
+          onClick={() =>{
+            if(columnsCurrentStep !== 0) {
+              dispatch(setColumnsCurrentStep(0))
+              dispatch(setColumnsAdvanceNext(true))
+
+            }
+
+          }}
+        >
+          <TbPlayerTrackPrevFilled />
+        </button>
+
+        <button
+          className="px-2 py-[6px] rounded bg-gray-700 text-gray-200 hover:bg-gray-600"
+          onClick={() =>{
+            if(columnsCurrentStep > 0) {
+              dispatch(setColumnsCurrentStep(columnsCurrentStep - 1))
+              dispatch(setColumnsAdvanceNext(true))
+
+            }
+          }}>
+          <BiSolidLeftArrow/>
+        </button>
+
+        <button
+          className="px-2 py-[6px] rounded   bg-gray-700 text-gray-200 hover:bg-gray-600"
+          onClick={() =>{
+            console.log('columnsCurrentStep:' + columnsCurrentStep)
+            console.log('columnsSubsteps:' + columnsSubsteps)
+
+            if(columnsCurrentStep < columnsSubsteps.length-1) {
+              dispatch(setColumnsCurrentStep(columnsCurrentStep + 1))
+              console.log('doslosepredulazD:')
+              dispatch(setColumnsAdvanceNext(true))
+            }
+          }}>
+          <BiSolidRightArrow />
+
+        </button>
+
+        <button
+          className="px-2 py-[6px] rounded bg-gray-700 text-gray-200 hover:bg-gray-600"
+          onClick={() =>{
+            if(columnsCurrentStep < columnsSubsteps.length) {
+              dispatch(setColumnsCurrentStep(columnsSubsteps.length -1))
+              dispatch(setColumnsAdvanceNext(true))
+            }
+          }}
+        >
+          <TbPlayerTrackNextFilled />
+        </button>
+
+
+      </div>
+
+
     </div>
     </div>
   );

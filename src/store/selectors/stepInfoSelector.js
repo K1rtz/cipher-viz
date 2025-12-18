@@ -7,3 +7,5 @@ export const selectRowsInfo = (state) => state.stepInfo.rowsInfo
 export const selectColumnsInfo = (state) => state.stepInfo.columnsInfo
 export const selectRowsCurrentStep = (state) => state.stepInfo.rowsInfo.currentStep
 export const selectRowsSubsteps = (state) => state.stepInfo.rowsInfo.substeps
+export const selectColumnsCurrentStep = (state) => state.stepInfo.columnsInfo.currentStep
+export const selectColumnsSubsteps = (state) => state.stepInfo.columnsInfo.substeps

@@ -11,7 +11,6 @@ function App() {
     <Routes>
       <Route element={<UnauthLayout/>}>
         <Route path="/" element={<Home />} />
-        <Route path="/about" element={<About />} />
         <Route path="/simulation" element={<Simulation />} />
       </Route>
     </Routes>
