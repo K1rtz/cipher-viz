@@ -151,9 +151,18 @@ export default function MatrixDisplay({ rows = 7, cols = 7 }) {
               <motion.div
                 key={header.id}
                 layout
-                transition={{ type: 'spring', stiffness: 90, damping: 20 }}
-                className={`flex items-center justify-center rounded-md border border-gray-700/50
-      ${fixedColumns[c] ? 'bg-green-600 text-white' : 'bg-gray-800/30 text-gray-300'}`}
+                animate={{
+                  backgroundColor: fixedColumns[c]
+                    ? 'rgb(22 163 74)'      // green-600
+                    : 'rgba(31, 41, 55, 0.3)', // gray-800/30
+                  color: fixedColumns[c] ? '#fff' : '#d1d5db'
+                }}
+                transition={{
+                  backgroundColor: { duration: 0.6 },
+                  color: { duration: 0.6 },
+                  layout: { type: 'spring', stiffness: 80, damping: 20 }
+                }}
+                className="flex items-center justify-center rounded-md border border-gray-700/50"
                 style={{ width: 64, height: 64 }}
               >
                 {header.label}
@@ -166,20 +175,30 @@ export default function MatrixDisplay({ rows = 7, cols = 7 }) {
                 {/* Row header */}
                 <motion.div
                   layout
-                  transition={{ type: 'spring', stiffness: 90, damping: 20 }}
-                  className={`flex items-center transition-colors ease-in duration-300 justify-center text-gray-300 rounded-md border border-gray-700/50
-                    ${fixedRows[r] ? 'bg-green-600 text-white' : 'bg-gray-800/30'}`}
+                  animate={{
+                    backgroundColor: fixedRows[r]
+                      ? 'rgb(22 163 74)'          // green-600
+                      : 'rgba(31, 41, 55, 0.3)',  // gray-800/30
+                    color: fixedRows[r] ? '#ffffff' : '#d1d5db',
+                  }}
+                  transition={{
+                    backgroundColor: { duration: 0.6 },
+                    color: { duration: 0.6 },
+                    layout: { type: 'spring', stiffness: 80, damping: 20 },
+                  }}
+                  className="flex items-center justify-center rounded-md border border-gray-700/50"
                   style={{ width: 64, height: 64 }}
                 >
                   {rowHeaders[r].label}
                 </motion.div>
+
 
                 {/* Tiles */}
                 {row.tiles.map(tile => (
                   <motion.div
                     key={tile.id}
                     layout
-                    transition={{ type: 'spring', stiffness: 90, damping: 20 }}
+                    transition={{ type: 'spring', stiffness: 80, damping: 20 }}
                     className={`flex items-center justify-center rounded-lg font-mono text-xl border font-bold transition-colors duration-300 ease-out border-gray-700/50 ${
                       tile.value === ' ' && activeStep == '0' ? 'bg-gray-800/50 text-gray-600' : 'bg-blue-600 text-white border-blue-400 shadow-md'
                     }`}

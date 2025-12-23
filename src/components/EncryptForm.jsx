@@ -1,22 +1,47 @@
-import React, { useState } from "react";
+import React, {useEffect, useState} from "react";
 
 function EncryptForm() {
-  const [mode, setMode] = useState('encrypt'); // encrypt | decrypt
-  const [inputText, setInputText] = useState('');
-  const [outputText, setOutputText] = useState('');
+  const [config, setConfig] = useState({
+    mode: "encrypt", // encrypt | decrypt
+    inputText: "",
+    outputText: "",
+
+    uppercase: false,
+    removeSpaces: false,
+
+    numberOfRows: "8",
+    numberOfCols: "8",
+    rowKey: "76543210",
+    columnKey: "76543210",
+    transpositionOrder: "rows-first", // rows-first | cols-first
+
+    paddingStrategy: "fixed", // fixed | random | repeat
+    paddingChar: "X",
+  });
+
+  const updateConfig = (field, value) => {
+    setConfig((prev) => ({
+      ...prev,
+      [field]: value,
+    }));
+  };
+
+  useEffect(() => {
+    console.log(config);
+  },[config]);
+
 
   const handleProcess = () => {
-    // placeholder logika
-    const result = inputText.split('').reverse().join('');
-    setOutputText(result);
+
+    const result = ""; // placeholder
+    updateConfig("outputText", result);
   };
 
   return (
-    <div className="flex flex-col min-w-[800px] ">
+    <div className="flex flex-col min-w-[800px]">
       {/* Main card */}
       <div className="flex px-6 pt-6 items-center justify-center">
-        <div className="w-full  bg-gray-900/80 backdrop-blur-md border border-gray-700/50 rounded-2xl p-6 shadow-xl">
-
+        <div className="w-full bg-gray-900/80 backdrop-blur-md border border-gray-700/50 rounded-2xl p-6 shadow-xl">
           {/* Header */}
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-2xl font-bold text-white">
@@ -26,21 +51,21 @@ function EncryptForm() {
             {/* Mode toggle */}
             <div className="flex rounded-lg overflow-hidden border border-gray-700">
               <button
-                onClick={() => setMode('encrypt')}
+                onClick={() => updateConfig("mode", "encrypt")}
                 className={`px-4 py-1 text-sm transition-colors ${
-                  mode === 'encrypt'
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-gray-800 text-gray-400 hover:text-gray-200'
+                  config.mode === "encrypt"
+                    ? "bg-blue-600 text-white"
+                    : "bg-gray-800 text-gray-400 hover:text-gray-200"
                 }`}
               >
                 Encrypt
               </button>
               <button
-                onClick={() => setMode('decrypt')}
+                onClick={() => updateConfig("mode", "decrypt")}
                 className={`px-4 py-1 text-sm transition-colors ${
-                  mode === 'decrypt'
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-gray-800 text-gray-400 hover:text-gray-200'
+                  config.mode === "decrypt"
+                    ? "bg-blue-600 text-white"
+                    : "bg-gray-800 text-gray-400 hover:text-gray-200"
                 }`}
               >
                 Decrypt
@@ -50,26 +75,28 @@ function EncryptForm() {
 
           {/* Inputs */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Input */}
             <div>
               <label className="block text-sm text-gray-300 mb-1">
-                {mode === 'encrypt' ? 'Plain text' : 'Cipher text'}
+                {config.mode === "encrypt" ? "Plain text" : "Cipher text"}
               </label>
               <textarea
-                value={inputText}
-                onChange={(e) => setInputText(e.target.value)}
+                value={config.inputText}
+                onChange={(e) =>
+                  updateConfig("inputText", e.target.value)
+                }
                 rows={6}
                 className="w-full text-gray-200 bg-gray-800/60 rounded-lg px-3 py-2 border border-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
 
-            {/* Output */}
             <div>
               <label className="block text-sm text-gray-300 mb-1">
-                {mode === 'encrypt' ? 'Encrypted text' : 'Decrypted text'}
+                {config.mode === "encrypt"
+                  ? "Encrypted text"
+                  : "Decrypted text"}
               </label>
               <textarea
-                value={outputText}
+                value={config.outputText}
                 readOnly
                 rows={6}
                 className="w-full text-gray-300 bg-gray-800/40 rounded-lg px-3 py-2 border border-gray-700 cursor-not-allowed"
@@ -77,18 +104,17 @@ function EncryptForm() {
             </div>
           </div>
 
-          {/* Action button */}
           <button
             onClick={handleProcess}
             className="w-full mt-4 bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 rounded-lg transition-colors"
           >
-            {mode === 'encrypt' ? 'Encrypt' : 'Decrypt'}
+            {config.mode === "encrypt" ? "Encrypt" : "Decrypt"}
           </button>
         </div>
       </div>
 
       {/* Settings */}
-      <div className="mt-6  px-6  pt-4">
+      <div className="mt-6 px-6 pt-4">
         <h3 className="text-md border-t pt-2 font-semibold border-gray-700/50 text-gray-300 mb-3">
           Encryption settings
         </h3>
@@ -100,6 +126,10 @@ function EncryptForm() {
             </label>
             <input
               type="text"
+              value={config.numberOfRows}
+              onChange={(e) =>
+                updateConfig("numberOfRows", e.target.value)
+              }
               className="w-full bg-gray-800/60 text-gray-200 px-2 py-1 rounded border border-gray-700"
               placeholder="8"
             />
@@ -111,6 +141,10 @@ function EncryptForm() {
             </label>
             <input
               type="text"
+              value={config.numberOfCols}
+              onChange={(e) =>
+                updateConfig("numberOfCols", e.target.value)
+              }
               className="w-full bg-gray-800/60 text-gray-200 px-2 py-1 rounded border border-gray-700"
               placeholder="8"
             />
@@ -122,8 +156,12 @@ function EncryptForm() {
             </label>
             <input
               type="text"
+              value={config.rowKey}
+              onChange={(e) =>
+                updateConfig("rowKey", e.target.value)
+              }
               className="w-full bg-gray-800/60 text-gray-200 px-2 py-1 rounded border border-gray-700"
-              placeholder="10452376"
+              placeholder="76543210"
             />
           </div>
 
@@ -133,8 +171,12 @@ function EncryptForm() {
             </label>
             <input
               type="text"
+              value={config.columnKey}
+              onChange={(e) =>
+                updateConfig("columnKey", e.target.value)
+              }
               className="w-full bg-gray-800/60 text-gray-200 px-2 py-1 rounded border border-gray-700"
-              placeholder="10743256"
+              placeholder="76543210"
             />
           </div>
 
@@ -142,22 +184,88 @@ function EncryptForm() {
             <label className="block text-xs text-gray-400 mb-1">
               Transposition order
             </label>
-            <select className="w-full bg-gray-800/60 text-gray-200 px-2 py-1 rounded border border-gray-700">
-              <option>Rows → Columns</option>
-              <option>Columns → Rows</option>
+            <select
+              value={config.transpositionOrder}
+              onChange={(e) =>
+                updateConfig("transpositionOrder", e.target.value)
+              }
+              className="w-full bg-gray-800/60 text-gray-200 px-2 py-1 rounded border border-gray-700"
+            >
+              <option value="rows-first">Rows → Columns</option>
+              <option value="cols-first">Columns → Rows</option>
             </select>
           </div>
 
           <div>
             <label className="block text-xs text-gray-400 mb-1">
-              Padding character
+              Padding
             </label>
-            <input
-              type="text"
-              maxLength={1}
-              className="w-full bg-gray-800/60 text-gray-200 px-2 py-1 rounded border border-gray-700"
-              placeholder="X"
-            />
+
+            <div className="grid grid-cols-2 gap-2">
+              <select
+                value={config.paddingStrategy}
+                onChange={(e) =>
+                  updateConfig("paddingStrategy", e.target.value)
+                }
+                className="bg-gray-800/60 text-gray-200 px-2 py-1 rounded border border-gray-700"
+              >
+                <option value="fixed">Fixed character</option>
+                <option value="random">Random characters</option>
+                <option value="repeat">Repeat plaintext</option>
+              </select>
+
+              <input
+                type="text"
+                maxLength={1}
+                value={
+                  config.paddingStrategy === "fixed"
+                    ? config.paddingChar
+                    : ""
+                }
+                onChange={(e) =>
+                  updateConfig("paddingChar", e.target.value)
+                }
+                disabled={config.paddingStrategy !== "fixed"}
+                placeholder="X"
+                className={`px-2 py-1 rounded border ${
+                  config.paddingStrategy === "fixed"
+                    ? "bg-gray-800/60 text-gray-200 border-gray-700"
+                    : "bg-gray-800/30 text-gray-500 border-gray-700 cursor-not-allowed"
+                }`}
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-xs text-gray-400 mb-2">
+              Text preprocessing
+            </label>
+
+            <div className="flex gap-4">
+              <label className="flex items-center gap-2 text-sm text-gray-300 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={config.uppercase}
+                  onChange={(e) =>
+                    updateConfig("uppercase", e.target.checked)
+                  }
+                  className="w-4 h-4"
+                />
+                Convert to uppercase
+              </label>
+
+              <label className="flex items-center gap-2 text-sm text-gray-300 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={config.removeSpaces}
+                  onChange={(e) =>
+                    updateConfig("removeSpaces", e.target.checked)
+                  }
+                  className="w-4 h-4"
+                />
+                Remove spaces
+              </label>
+            </div>
           </div>
         </div>
       </div>
