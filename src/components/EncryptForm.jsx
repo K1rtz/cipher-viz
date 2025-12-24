@@ -1,18 +1,21 @@
 import React, {useEffect, useState} from "react";
-
+import {
+  encryptDoubleTransposition,
+  decryptDoubleTransposition,
+  validateConfig} from "../crypto/doubleTransposition"
 function EncryptForm() {
+
+  const [plainText, setPlainText] = useState("");
+  const [result, setResult] = useState("");
+
+
   const [config, setConfig] = useState({
     mode: "encrypt", // encrypt | decrypt
-    inputText: "",
-    outputText: "",
-
     uppercase: false,
     removeSpaces: false,
 
-    numberOfRows: "8",
-    numberOfCols: "8",
-    rowKey: "76543210",
-    columnKey: "76543210",
+    rowKey: "",
+    columnKey: "",
     transpositionOrder: "rows-first", // rows-first | cols-first
 
     paddingStrategy: "fixed", // fixed | random | repeat
@@ -26,15 +29,20 @@ function EncryptForm() {
     }));
   };
 
+
+
+
+
   useEffect(() => {
     console.log(config);
   },[config]);
 
 
   const handleProcess = () => {
+    console.log('handleprocess')
+    const result = encryptDoubleTransposition(plainText, config);
+    setResult(result);
 
-    const result = ""; // placeholder
-    updateConfig("outputText", result);
   };
 
   return (
@@ -80,9 +88,9 @@ function EncryptForm() {
                 {config.mode === "encrypt" ? "Plain text" : "Cipher text"}
               </label>
               <textarea
-                value={config.inputText}
+                value={plainText}
                 onChange={(e) =>
-                  updateConfig("inputText", e.target.value)
+                  setPlainText(e.target.value)
                 }
                 rows={6}
                 className="w-full text-gray-200 bg-gray-800/60 rounded-lg px-3 py-2 border border-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -96,7 +104,7 @@ function EncryptForm() {
                   : "Decrypted text"}
               </label>
               <textarea
-                value={config.outputText}
+                value={result}
                 readOnly
                 rows={6}
                 className="w-full text-gray-300 bg-gray-800/40 rounded-lg px-3 py-2 border border-gray-700 cursor-not-allowed"
@@ -120,35 +128,7 @@ function EncryptForm() {
         </h3>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label className="block text-xs text-gray-400 mb-1">
-              Number of rows
-            </label>
-            <input
-              type="text"
-              value={config.numberOfRows}
-              onChange={(e) =>
-                updateConfig("numberOfRows", e.target.value)
-              }
-              className="w-full bg-gray-800/60 text-gray-200 px-2 py-1 rounded border border-gray-700"
-              placeholder="8"
-            />
-          </div>
 
-          <div>
-            <label className="block text-xs text-gray-400 mb-1">
-              Number of columns
-            </label>
-            <input
-              type="text"
-              value={config.numberOfCols}
-              onChange={(e) =>
-                updateConfig("numberOfCols", e.target.value)
-              }
-              className="w-full bg-gray-800/60 text-gray-200 px-2 py-1 rounded border border-gray-700"
-              placeholder="8"
-            />
-          </div>
 
           <div>
             <label className="block text-xs text-gray-400 mb-1">
@@ -160,8 +140,8 @@ function EncryptForm() {
               onChange={(e) =>
                 updateConfig("rowKey", e.target.value)
               }
-              className="w-full bg-gray-800/60 text-gray-200 px-2 py-1 rounded border border-gray-700"
-              placeholder="76543210"
+              className="w-full bg-gray-800/60 text-gray-200 placeholder:text-gray-600  px-2 py-1 rounded border border-gray-700"
+              placeholder="rows key"
             />
           </div>
 
@@ -175,8 +155,8 @@ function EncryptForm() {
               onChange={(e) =>
                 updateConfig("columnKey", e.target.value)
               }
-              className="w-full bg-gray-800/60 text-gray-200 px-2 py-1 rounded border border-gray-700"
-              placeholder="76543210"
+              className="w-full bg-gray-800/60 placeholder:text-gray-600 text-gray-200 px-2 py-1 rounded border border-gray-700"
+              placeholder="columns key"
             />
           </div>
 
