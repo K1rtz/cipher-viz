@@ -1,25 +1,107 @@
 import React, {useState} from 'react';
 import { useSelector, useDispatch } from 'react-redux'
-import { selectActiveStep } from './../store/selectors/stepInfoSelector.js'
-import { setActiveStep } from './../store/reducers/stepInfoReducer'
+import {
+  selectActiveStep,
+  selectColumnKey,
+  selectPlainText,
+  selectRowKey,
+  selectNextSubstepSignal,
+  selectRowsCurrentStep,
+  selectRowsSubsteps,
+  selectColumnsCurrentStep,
+  selectColumnsSubsteps,
+} from './../store/selectors/stepInfoSelector.js'
+import { setActiveStep, setPlainText, setRowKey, setColumnKey, setRowsSubsteps, setRowsCurrentStep, setRowsAdvanceNext, setColumnsCurrentStep, setColumnsSubsteps, setColumnsAdvanceNext} from './../store/reducers/stepInfoReducer'
+import { BiSolidRightArrow } from "react-icons/bi";
+import { BiSolidLeftArrow } from "react-icons/bi";
+import { TbPlayerTrackPrevFilled } from "react-icons/tb";
+import { TbPlayerTrackNextFilled } from "react-icons/tb";
 
 export default function StepController() {
   const steps = [
-    { id: 1, title: 'Fill Grid', description: 'Text is placed into a grid, filled with the chosen filler.' },
-    { id: 2, title: 'First Transposition', description: 'Rows are reordered based on the first password.' },
-    { id: 3, title: 'Second Transposition', description: 'Columns are reordered based on the second password.' },
+    {
+      id: 1,
+      title: 'Unos poruke',
+      description: 'Unesite tekst koji će biti šifrovan korišćenjem metode dvostruke transpozicije.',
+      keyText: 'Poruka:'
+    },
+    {
+      id: 2,
+      title: 'Permutacije redova',
+      description: 'Unesite ključ na osnovu kog će se izvršiti permutacija redova matrice.',
+      keyText: 'Ključ:'
+    },
+    {
+      id: 3,
+      title: 'Permutacije kolona',
+      description: 'Unesite ključ na osnovu kog će se izvršiti permutacija kolona matrice.',
+      keyText: 'Ključ:'
+    },
+    {
+      id: 4,
+      title: 'Šifrovana poruka',
+      description: 'Prikaz konačne šifrovane poruke dobijene nakon obe transpozicije.',
+      keyText: ''
+    }
   ];
   const dispatch = useDispatch()
+  const rowsCurrentStep = useSelector(selectRowsCurrentStep)
+  const rowsSubsteps = useSelector(selectRowsSubsteps)
+  const columnsCurrentStep = useSelector(selectColumnsCurrentStep)
+  const columnsSubsteps = useSelector(selectColumnsSubsteps)
+
 
   const currentStep = useSelector(selectActiveStep)
-
+  const plainText = useSelector(selectPlainText)
+  const rowKey = useSelector(selectRowKey)
+  const columnKey = useSelector(selectColumnKey)
+  const nextSubstepSignal = useSelector(selectNextSubstepSignal)
 
 
   const handlePrevious = () => {
     if (currentStep > 0)
       dispatch(setActiveStep(currentStep - 1))
-
   };
+
+  function generateSubsteps(key) {
+    const n = key.length;
+    const target = key.split('').map(Number);
+    const steps = [];
+
+    // Inicijalni korak
+    const current = Array.from({ length: n }, (_, i) => i);
+    steps.push([...current]);
+
+    for (let i = 0; i < n; i++) {
+      if (current[i] !== target[i]) {
+        // Nađi gde je ciljna kolona i swapuj
+        const swapIndex = current.indexOf(target[i]);
+        [current[i], current[swapIndex]] = [current[swapIndex], current[i]];
+        steps.push([...current]);
+      }
+    }
+
+    return steps;
+  }
+
+  const handleGenerateRowSubsteps = () =>{
+  if(!rowKey || rowKey.length === 0) return
+    const substeps = generateSubsteps(rowKey)
+
+    console.log(substeps);
+    dispatch(setRowsSubsteps(substeps))
+    dispatch(setRowsCurrentStep(0))
+    dispatch(setRowsAdvanceNext(true))
+  }
+
+  const handleGenerateColumnSubsteps = () =>{
+    if(!columnKey || columnKey.length === 0) return
+    const substeps = generateSubsteps(columnKey)
+
+    dispatch(setColumnsSubsteps(substeps))
+    dispatch(setColumnsCurrentStep(0))
+    dispatch(setColumnsAdvanceNext(true))
+  }
 
   const handleNext = () => {
     if (currentStep < steps.length - 1)
@@ -27,11 +109,13 @@ export default function StepController() {
   };
 
   return (
-    <div className='px-6 pt-6'>
-    <div className="bg-gray-900/80 backdrop-blur-md p-6 rounded-xl shadow-lg border border-gray-700/50 transition-all duration-300">
+    <div className='px-6 pt-6 '
+         // onClick={() => dispatch(setNextSubstepSignal(!nextSubstepSignal))}
+    >
+    <div className="bg-gray-900/80 min-h-[170px] backdrop-blur-md p-6 rounded-xl shadow-lg border border-gray-700/50 transition-all duration-300">
       <div className="flex items-center justify-between mb-2">
         <h3 className="text-2xl font-bold text-white bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text">
-          Step {steps[currentStep].id} of {steps.length}: {steps[currentStep].title}
+         {steps[currentStep].title}
         </h3>
         <div className="flex gap-3">
           <button
@@ -59,6 +143,171 @@ export default function StepController() {
         </div>
       </div>
       <p className="text-gray-300 text-sm leading-relaxed">{steps[currentStep].description}</p>
+      <input type='text'
+             maxLength={49}
+             value={plainText}
+             onChange={(e) => dispatch(setPlainText(e.target.value.toUpperCase())) }
+             className={`text-gray-300 bg-gray-700/50 w-full uppercase mt-2  ${currentStep === 0 ? 'flex' : 'hidden'} rounded-[4px] px-2 py-1 text-sm leading-relaxed `}></input>
+
+      <div
+        className={`flex items-center gap-2 mt-4 ${
+          currentStep === 1 ? 'flex' : 'hidden'
+        }`}
+      >
+        <input
+          type="text"
+          maxLength={7}
+          value={rowKey}
+          onChange={(e) => dispatch(setRowKey(e.target.value))}
+          className="flex-1 text-gray-300 bg-gray-700/50 rounded px-2 py-1 text-sm"
+        />
+
+        <button
+          className="px-3 text-sm py-[4px] rounded bg-blue-600 text-white hover:bg-blue-500"
+          onClick={handleGenerateRowSubsteps}
+        >
+          Potvrdi
+        </button>
+        <button
+          className="px-2 py-[6px] rounded bg-gray-700 text-gray-200 hover:bg-gray-600"
+          onClick={() =>{
+            console.log(rowsCurrentStep);
+            if(rowsCurrentStep !== 0) {
+              dispatch(setRowsCurrentStep(0))
+              // dispatch(setNextSubstepSignal(!nextSubstepSignal))
+              dispatch(setRowsAdvanceNext(true))
+
+            }
+
+          }}
+        >
+          <TbPlayerTrackPrevFilled />
+        </button>
+
+        <button
+          className="px-2 py-[6px] rounded bg-gray-700 text-gray-200 hover:bg-gray-600"
+          onClick={() =>{
+            console.log(rowsCurrentStep);
+            if(rowsCurrentStep > 0) {
+              dispatch(setRowsCurrentStep(rowsCurrentStep - 1))
+              // dispatch(setNextSubstepSignal(!nextSubstepSignal))
+              dispatch(setRowsAdvanceNext(true))
+
+            }
+          }}>
+          <BiSolidLeftArrow/>
+        </button>
+
+        <button
+          className="px-2 py-[6px] rounded bg-gray-700 text-gray-200 hover:bg-gray-600"
+          onClick={() =>{
+            console.log(rowsCurrentStep);
+            if(rowsCurrentStep < rowsSubsteps.length-1) {
+              dispatch(setRowsCurrentStep(rowsCurrentStep + 1))
+              // dispatch(setNextSubstepSignal(!nextSubstepSignal))
+              dispatch(setRowsAdvanceNext(true))
+            }
+          }}>
+          <BiSolidRightArrow />
+
+        </button>
+
+        <button
+          className="px-2 py-[6px] rounded bg-gray-700 text-gray-200 hover:bg-gray-600"
+          onClick={() =>{
+            console.log(rowsCurrentStep);
+            if(rowsCurrentStep < rowsSubsteps.length) {
+              dispatch(setRowsCurrentStep(rowsSubsteps.length -1))
+              dispatch(setRowsAdvanceNext(true))
+            }
+          }}
+        >
+          <TbPlayerTrackNextFilled />
+        </button>
+
+
+      </div>
+
+
+      <div
+        className={`flex items-center gap-2 mt-4 ${
+          currentStep === 2 ? 'flex' : 'hidden'
+        }`}
+      >
+        <input
+          type="text"
+          maxLength={7}
+          value={columnKey}
+          onChange={(e) =>{
+            console.log('typed:', e.target.value)
+            dispatch(setColumnKey(e.target.value))}}
+          className="flex-1 text-gray-300 bg-gray-700/50 rounded px-2 py-1 text-sm"
+        />
+
+        <button
+          className="px-3 text-sm py-[4px] rounded bg-blue-600 text-white hover:bg-blue-500"
+          onClick={handleGenerateColumnSubsteps}
+        >
+          Potvrdi
+        </button>
+        <button
+          className="px-2 py-[6px] rounded bg-gray-700 text-gray-200 hover:bg-gray-600"
+          onClick={() =>{
+            if(columnsCurrentStep !== 0) {
+              dispatch(setColumnsCurrentStep(0))
+              dispatch(setColumnsAdvanceNext(true))
+
+            }
+
+          }}
+        >
+          <TbPlayerTrackPrevFilled />
+        </button>
+
+        <button
+          className="px-2 py-[6px] rounded bg-gray-700 text-gray-200 hover:bg-gray-600"
+          onClick={() =>{
+            if(columnsCurrentStep > 0) {
+              dispatch(setColumnsCurrentStep(columnsCurrentStep - 1))
+              dispatch(setColumnsAdvanceNext(true))
+
+            }
+          }}>
+          <BiSolidLeftArrow/>
+        </button>
+
+        <button
+          className="px-2 py-[6px] rounded   bg-gray-700 text-gray-200 hover:bg-gray-600"
+          onClick={() =>{
+            console.log('columnsCurrentStep:' + columnsCurrentStep)
+            console.log('columnsSubsteps:' + columnsSubsteps)
+
+            if(columnsCurrentStep < columnsSubsteps.length-1) {
+              dispatch(setColumnsCurrentStep(columnsCurrentStep + 1))
+              console.log('doslosepredulazD:')
+              dispatch(setColumnsAdvanceNext(true))
+            }
+          }}>
+          <BiSolidRightArrow />
+
+        </button>
+
+        <button
+          className="px-2 py-[6px] rounded bg-gray-700 text-gray-200 hover:bg-gray-600"
+          onClick={() =>{
+            if(columnsCurrentStep < columnsSubsteps.length) {
+              dispatch(setColumnsCurrentStep(columnsSubsteps.length -1))
+              dispatch(setColumnsAdvanceNext(true))
+            }
+          }}
+        >
+          <TbPlayerTrackNextFilled />
+        </button>
+
+
+      </div>
+
+
     </div>
     </div>
   );
