@@ -162,7 +162,7 @@ export default function MatrixDisplay({ rows = 7, cols = 7 }) {
                   color: { duration: 0.6 },
                   layout: { type: 'spring', stiffness: 80, damping: 20 }
                 }}
-                className="flex items-center justify-center rounded-md border border-gray-700/50"
+                className="flex items-center justify-center bg-gray-800/30 rounded-md border border-gray-700/50"
                 style={{ width: 64, height: 64 }}
               >
                 {header.label}
@@ -186,7 +186,7 @@ export default function MatrixDisplay({ rows = 7, cols = 7 }) {
                     color: { duration: 0.6 },
                     layout: { type: 'spring', stiffness: 80, damping: 20 },
                   }}
-                  className="flex items-center justify-center rounded-md border border-gray-700/50"
+                  className="flex items-center justify-center bg-gray-800/30 rounded-md border border-gray-700/50"
                   style={{ width: 64, height: 64 }}
                 >
                   {rowHeaders[r].label}

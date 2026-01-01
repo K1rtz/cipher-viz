@@ -7,7 +7,7 @@ function EncryptForm() {
 
   const [plainText, setPlainText] = useState("");
   const [result, setResult] = useState("");
-
+  const [mode, setMode] = useState(true);
 
   const [config, setConfig] = useState({
     mode: "encrypt", // encrypt | decrypt
@@ -30,7 +30,14 @@ function EncryptForm() {
   };
 
 
+  useEffect(() => {
+    if(!plainText || !result) return;
 
+    const temp = plainText;
+    setPlainText(result);
+    setResult(temp);
+
+  }, [mode]);
 
 
   useEffect(() => {
@@ -40,8 +47,15 @@ function EncryptForm() {
 
   const handleProcess = () => {
     console.log('handleprocess')
-    const result = encryptDoubleTransposition(plainText, config);
-    setResult(result);
+    let resultx;
+    if(config.mode === "encrypt") {
+      resultx = encryptDoubleTransposition(plainText, config);
+    }
+    else{
+
+      resultx = decryptDoubleTransposition(plainText, config);
+    }
+    setResult(resultx);
 
   };
 
@@ -59,7 +73,11 @@ function EncryptForm() {
             {/* Mode toggle */}
             <div className="flex rounded-lg overflow-hidden border border-gray-700">
               <button
-                onClick={() => updateConfig("mode", "encrypt")}
+                onClick={() => {
+                  updateConfig("mode", "encrypt")
+                  setMode(!mode);
+                }
+                }
                 className={`px-4 py-1 text-sm transition-colors ${
                   config.mode === "encrypt"
                     ? "bg-blue-600 text-white"
@@ -69,7 +87,10 @@ function EncryptForm() {
                 Encrypt
               </button>
               <button
-                onClick={() => updateConfig("mode", "decrypt")}
+                onClick={
+                () => {updateConfig("mode", "decrypt")
+                  setMode(!mode);
+              }}
                 className={`px-4 py-1 text-sm transition-colors ${
                   config.mode === "decrypt"
                     ? "bg-blue-600 text-white"
@@ -84,9 +105,15 @@ function EncryptForm() {
           {/* Inputs */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
+              <div className='flex justify-between'>
+
               <label className="block text-sm text-gray-300 mb-1">
                 {config.mode === "encrypt" ? "Plain text" : "Cipher text"}
               </label>
+              <label className="block text-sm text-gray-300 mb-1">
+                  len: {plainText.length.toLocaleString()}
+              </label>
+              </div>
               <textarea
                 value={plainText}
                 onChange={(e) =>

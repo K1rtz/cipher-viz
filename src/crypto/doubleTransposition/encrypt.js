@@ -10,7 +10,6 @@ export function encryptDoubleTransposition(text, config) {
   } = config;
 
 
-  //FUNKCIJA KOJA OD KLJUCA KREIRA NIZ BROJEVA ZA SIFRU:
   function keyToNumberArray(key) {
     const chars = key.split('');
 
@@ -38,19 +37,14 @@ export function encryptDoubleTransposition(text, config) {
   if (uppercase) cleanText = cleanText.toUpperCase();
   if (removeSpaces) cleanText = cleanText.replace(/\s/g, '');
 
-
-
-  // Pretvori key stringove u niz brojeva
   const rowPermutation = keyToNumberArray(rowKey)
   const colPermutation = keyToNumberArray(columnKey)
-
 
   const rows = rowPermutation.length;
   const cols = colPermutation.length;
   const size = rows * cols;
   console.log(rows, cols)
 
-  // Napuni matricu sa tekstom i padding-om
   const chars = new Array(size);
   for (let i = 0; i < size; i++) {
     if (i < cleanText.length) {
@@ -66,9 +60,7 @@ export function encryptDoubleTransposition(text, config) {
     }
   }
 
-  // -------------------------
   // 2. Permutacije
-  // -------------------------
   const tmp = new Array(size);
 
   if (transpositionOrder === 'rows-first') {
@@ -108,8 +100,5 @@ export function encryptDoubleTransposition(text, config) {
     }
   }
 
-  // -------------------------
-  // 3. Output
-  // -------------------------
   return chars.join('');
 }
