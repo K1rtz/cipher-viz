@@ -21,29 +21,38 @@ export default function StepController() {
   const steps = [
     {
       id: 1,
-      title: 'Unos poruke',
-      description: 'Unesite tekst koji će biti šifrovan korišćenjem metode dvostruke transpozicije.',
-      keyText: 'Poruka:'
+      title: 'Input Text',
+      description:
+        'Enter the original message that will be encrypted using the Double Transposition cipher. ' +
+        'This text will be placed sequentially into the matrix row by row and serves as the starting point of the encryption process.',
+      keyText: 'Message:'
     },
     {
       id: 2,
-      title: 'Permutacije redova',
-      description: 'Unesite ključ na osnovu kog će se izvršiti permutacija redova matrice.',
-      keyText: 'Ključ:'
+      title: 'Row Permutation',
+      description:
+        'Provide a numerical key that defines how the rows of the matrix will be rearranged. ' +
+        'Each digit in the key represents the new position of a row, allowing you to observe step-by-step how row permutations affect the structure of the message.',
+      keyText: 'Key:'
     },
     {
       id: 3,
-      title: 'Permutacije kolona',
-      description: 'Unesite ključ na osnovu kog će se izvršiti permutacija kolona matrice.',
-      keyText: 'Ključ:'
+      title: 'Column Permutation',
+      description:
+        'Provide a numerical key that determines the reordering of the matrix columns. ' +
+        'After rows have been permuted, the same principle is applied to columns, further obscuring the original message and increasing the security of the cipher.',
+      keyText: 'Key:'
     },
     {
       id: 4,
-      title: 'Šifrovana poruka',
-      description: 'Prikaz konačne šifrovane poruke dobijene nakon obe transpozicije.',
+      title: 'Encrypted Output',
+      description:
+        'This step displays the final encrypted message obtained after completing both row and column transpositions. ' +
+        'The resulting ciphertext illustrates how double transposition significantly changes the original text while preserving all characters.',
       keyText: ''
     }
   ];
+
   const dispatch = useDispatch()
   const rowsCurrentStep = useSelector(selectRowsCurrentStep)
   const rowsSubsteps = useSelector(selectRowsSubsteps)
@@ -63,9 +72,33 @@ export default function StepController() {
       dispatch(setActiveStep(currentStep - 1))
   };
 
+
+  function keyToNumberArray(key) {
+    const chars = key.split('');
+
+    const indexedChars = chars.map((char, idx) => ({ char, idx }));
+
+    const sorted = [...indexedChars].sort((a, b) => {
+      if (a.char < b.char) return -1;
+      if (a.char > b.char) return 1;
+      return a.idx - b.idx;
+    });
+
+    const orderMap = new Array(key.length);
+    sorted.forEach((item, i) => {
+      orderMap[item.idx] = i;
+    });
+
+    return orderMap;
+  }
+
   function generateSubsteps(key) {
+    console.log(key)
     const n = key.length;
-    const target = key.split('').map(Number);
+    console.log(keyToNumberArray(key))
+    // const target = key.split('').map(Number);
+    const target = keyToNumberArray(key)
+    console.log(target)
     const steps = [];
 
     const current = Array.from({ length: n }, (_, i) => i);
@@ -162,7 +195,7 @@ export default function StepController() {
           className="px-3 text-sm py-[4px] rounded bg-blue-600 text-white hover:bg-blue-500"
           onClick={handleGenerateRowSubsteps}
         >
-          Potvrdi
+          Confirm
         </button>
         <button
           className="px-2 py-[6px] rounded bg-gray-700 text-gray-200 hover:bg-gray-600"
