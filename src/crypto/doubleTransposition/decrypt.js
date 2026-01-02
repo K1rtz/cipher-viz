@@ -2,9 +2,7 @@ export function decryptDoubleTransposition(cipherText, config) {
   const {
     rowKey,
     columnKey,
-    paddingStrategy = 'fixed',
-    paddingChar = 'X',
-    transpositionOrder = 'rows-first', // 'rows-first' ili 'columns-first'
+    transpositionOrder = 'rows-first', //TODO fix
   } = config;
 
   function keyToNumberArray(key) {
@@ -32,7 +30,6 @@ export function decryptDoubleTransposition(cipherText, config) {
 
   // Napuni matricu sa cipherText
   const chars = cipherText.split('');
-  const len = cipherText.length;
 
   const tmp = new Array(size);
 
@@ -74,13 +71,6 @@ export function decryptDoubleTransposition(cipherText, config) {
       }
     }
   }
-
-  // Opcionalno ukloni padding ako je fiksni karakter
-  console.log(chars.join(''))
-  console.log(len)
-  // if (paddingStrategy === 'fixed') {
-  //   return chars.join('').replace(new RegExp(`${paddingChar}+$`), '');
-  // }
 
   return chars.join('');
 }

@@ -68,13 +68,11 @@ export default function StepController() {
     const target = key.split('').map(Number);
     const steps = [];
 
-    // Inicijalni korak
     const current = Array.from({ length: n }, (_, i) => i);
     steps.push([...current]);
 
     for (let i = 0; i < n; i++) {
       if (current[i] !== target[i]) {
-        // Nađi gde je ciljna kolona i swapuj
         const swapIndex = current.indexOf(target[i]);
         [current[i], current[swapIndex]] = [current[swapIndex], current[i]];
         steps.push([...current]);
@@ -109,9 +107,7 @@ export default function StepController() {
   };
 
   return (
-    <div className='px-6 pt-6 '
-         // onClick={() => dispatch(setNextSubstepSignal(!nextSubstepSignal))}
-    >
+    <div className='px-6 pt-6 '>
     <div className="bg-gray-900/80 min-h-[170px] backdrop-blur-md p-6 rounded-xl shadow-lg border border-gray-700/50 transition-all duration-300">
       <div className="flex items-center justify-between mb-2">
         <h3 className="text-2xl font-bold text-white bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text">
@@ -204,7 +200,6 @@ export default function StepController() {
             console.log(rowsCurrentStep);
             if(rowsCurrentStep < rowsSubsteps.length-1) {
               dispatch(setRowsCurrentStep(rowsCurrentStep + 1))
-              // dispatch(setNextSubstepSignal(!nextSubstepSignal))
               dispatch(setRowsAdvanceNext(true))
             }
           }}>
@@ -248,7 +243,7 @@ export default function StepController() {
           className="px-3 text-sm py-[4px] rounded bg-blue-600 text-white hover:bg-blue-500"
           onClick={handleGenerateColumnSubsteps}
         >
-          Potvrdi
+          Confirm
         </button>
         <button
           className="px-2 py-[6px] rounded bg-gray-700 text-gray-200 hover:bg-gray-600"

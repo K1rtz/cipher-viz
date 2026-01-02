@@ -14,11 +14,11 @@ import {setRowsAdvanceNext, setColumnsAdvanceNext} from './../store/reducers/ste
 export default function MatrixDisplay({ rows = 7, cols = 7 }) {
 
   const activeStep = useSelector(selectActiveStep);
-  const prevStepState = useState(activeStep)[0]; // za jednostavnost
+  // const prevStepState = useState(activeStep)[0]; // za jednostavnost
   const plainText = useSelector(selectPlainText);
-  const rowKey = useSelector(selectRowKey);
-  const columnKey = useSelector(selectColumnKey);
-  const nextSubstep = useSelector(selectNextSubstepSignal);
+  // const rowKey = useSelector(selectRowKey);
+  // const columnKey = useSelector(selectColumnKey);
+  // const nextSubstep = useSelector(selectNextSubstepSignal);
   const rowsInfo = useSelector(selectRowsInfo);
   const columnsInfo = useSelector(selectColumnsInfo);
 
