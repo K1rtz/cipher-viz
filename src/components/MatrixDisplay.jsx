@@ -59,6 +59,9 @@ export default function MatrixDisplay({ rows = 7, cols = 7 }) {
   }, [plainText]);
 
   // Permutacija redova (uvek referencira inicijalne redove)
+
+
+
   const handleAnimateRows = (key) => {
     const targetOrder = key.split('').map(Number);
     setRowHeaders(targetOrder.map(i => ({ id: i, label: i })));
@@ -68,6 +71,8 @@ export default function MatrixDisplay({ rows = 7, cols = 7 }) {
   };
   const handleAnimateColumns = (key) => {
     const targetOrder = key.split('').map(Number);
+
+
     setColumnHeaders(targetOrder.map(i => ({ id: i, label: i })));
     // tiles po kolonama
     setMatrixRows(prev =>
@@ -80,13 +85,6 @@ export default function MatrixDisplay({ rows = 7, cols = 7 }) {
     );
   };
 
-  // Na substep signal
-  // useEffect(() => {
-  //   if (!rowsInfo.substeps.length) return;
-  //   const currentStepArray = rowsInfo.substeps[rowsInfo.currentStep];
-  //   const permutation = currentStepArray.join('');
-  //   handleAnimateRows(permutation);
-  // }, [nextSubstep]);
 
   useEffect(() => {
     if (!rowsInfo.advanceNext) return;
