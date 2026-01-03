@@ -10,6 +10,8 @@ import {
   selectRowsSubsteps,
   selectColumnsCurrentStep,
   selectColumnsSubsteps,
+  selectMatrixColsLen,
+  selectMatrixRowsLen,
 } from './../store/selectors/stepInfoSelector.js'
 import { setActiveStep, setPlainText, setRowKey, setColumnKey, setRowsSubsteps, setRowsCurrentStep, setRowsAdvanceNext, setColumnsCurrentStep, setColumnsSubsteps, setColumnsAdvanceNext} from './../store/reducers/stepInfoReducer'
 import { BiSolidRightArrow } from "react-icons/bi";
@@ -58,13 +60,14 @@ export default function StepController() {
   const rowsSubsteps = useSelector(selectRowsSubsteps)
   const columnsCurrentStep = useSelector(selectColumnsCurrentStep)
   const columnsSubsteps = useSelector(selectColumnsSubsteps)
-
+  const matrixColsLen = useSelector(selectMatrixColsLen)
+  const matrixRowsLen = useSelector(selectMatrixRowsLen)
+  const maxLen = matrixColsLen * matrixRowsLen;
 
   const currentStep = useSelector(selectActiveStep)
   const plainText = useSelector(selectPlainText)
   const rowKey = useSelector(selectRowKey)
   const columnKey = useSelector(selectColumnKey)
-  const nextSubstepSignal = useSelector(selectNextSubstepSignal)
 
 
   const handlePrevious = () => {
@@ -116,6 +119,15 @@ export default function StepController() {
   }
 
   const handleGenerateRowSubsteps = () =>{
+
+    if(rowKey.length !== matrixRowsLen){
+      setShowRowsKeyError(true)
+      return
+    }
+    if(showRowsKeyError){
+      setShowRowsKeyError(false);
+    }
+
   if(!rowKey || rowKey.length === 0) return
     const substeps = generateSubsteps(rowKey)
 
@@ -124,8 +136,18 @@ export default function StepController() {
     dispatch(setRowsCurrentStep(0))
     dispatch(setRowsAdvanceNext(true))
   }
+  const [showColsKeyError, setShowColsKeyError] = useState(false)
+  const [showRowsKeyError, setShowRowsKeyError] = useState(false)
 
   const handleGenerateColumnSubsteps = () =>{
+    if(columnKey.length !== matrixColsLen){
+      console.log('xdd nisu iste duzine')
+      setShowColsKeyError(true)
+      return
+    }
+    if(showColsKeyError){
+      setShowColsKeyError(false);
+    }
     if(!columnKey || columnKey.length === 0) return
     const substeps = generateSubsteps(columnKey)
 
@@ -172,24 +194,58 @@ export default function StepController() {
         </div>
       </div>
       <p className="text-gray-300 text-sm leading-relaxed">{steps[currentStep].description}</p>
-      <input type='text'
-             maxLength={49}
-             value={plainText}
-             onChange={(e) => dispatch(setPlainText(e.target.value.toUpperCase())) }
-             className={`text-gray-300 bg-gray-700/50 w-full uppercase mt-2  ${currentStep === 0 ? 'flex' : 'hidden'} rounded-[4px] px-2 py-1 text-sm leading-relaxed `}></input>
+      <div className={`flex items-center gap-2 mt-4 ${currentStep === 0 ? 'flex' : 'hidden'}`}>
+
+        <div className="relative flex-1">
+          <input
+            type="text"
+            maxLength={maxLen}
+            value={plainText}
+            onChange={(e) =>
+              dispatch(setPlainText(e.target.value.toUpperCase()))
+            }
+            className="w-full text-gray-300 bg-gray-700/50 rounded px-2 py-1 pr-14 text-sm"
+          />
+
+          <span className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-xs text-gray-400">
+    {plainText.length}/{maxLen}
+  </span>
+        </div>
+
+        <button
+          className="px-3 text-sm py-[4px] rounded bg-blue-600 text-white hover:bg-blue-500"
+          onClick={handleGenerateRowSubsteps}
+        >
+          Confirm
+        </button>
+      </div>
 
       <div
-        className={`flex items-center gap-2 mt-4 ${
+        className={`flex items-start gap-2 mt-4 ${
           currentStep === 1 ? 'flex' : 'hidden'
         }`}
       >
-        <input
-          type="text"
-          maxLength={7}
-          value={rowKey}
-          onChange={(e) => dispatch(setRowKey(e.target.value))}
-          className="flex-1 text-gray-300 bg-gray-700/50 rounded px-2 py-1 text-sm"
-        />
+
+        <div className="flex-1">
+          <input
+            type="text"
+            maxLength={matrixRowsLen}
+            value={rowKey}
+            onChange={(e) => {
+              dispatch(setRowKey(e.target.value))
+            }}
+            className="w-full text-gray-300 bg-gray-700/50 rounded px-2 py-1 text-sm"
+          />
+
+          {/* ERROR TEXT */}
+          {showRowsKeyError && (
+            <p className="mt-1 text-xs text-red-400">
+              Rows key must be exactly {matrixRowsLen} characters long.
+            </p>
+          )}
+        </div>
+
+
 
         <button
           className="px-3 text-sm py-[4px] rounded bg-blue-600 text-white hover:bg-blue-500"
@@ -203,7 +259,6 @@ export default function StepController() {
             console.log(rowsCurrentStep);
             if(rowsCurrentStep !== 0) {
               dispatch(setRowsCurrentStep(0))
-              // dispatch(setNextSubstepSignal(!nextSubstepSignal))
               dispatch(setRowsAdvanceNext(true))
 
             }
@@ -212,21 +267,18 @@ export default function StepController() {
         >
           <TbPlayerTrackPrevFilled />
         </button>
-
         <button
           className="px-2 py-[6px] rounded bg-gray-700 text-gray-200 hover:bg-gray-600"
           onClick={() =>{
             console.log(rowsCurrentStep);
             if(rowsCurrentStep > 0) {
               dispatch(setRowsCurrentStep(rowsCurrentStep - 1))
-              // dispatch(setNextSubstepSignal(!nextSubstepSignal))
               dispatch(setRowsAdvanceNext(true))
 
             }
           }}>
           <BiSolidLeftArrow/>
         </button>
-
         <button
           className="px-2 py-[6px] rounded bg-gray-700 text-gray-200 hover:bg-gray-600"
           onClick={() =>{
@@ -237,9 +289,7 @@ export default function StepController() {
             }
           }}>
           <BiSolidRightArrow />
-
         </button>
-
         <button
           className="px-2 py-[6px] rounded bg-gray-700 text-gray-200 hover:bg-gray-600"
           onClick={() =>{
@@ -252,25 +302,31 @@ export default function StepController() {
         >
           <TbPlayerTrackNextFilled />
         </button>
-
-
       </div>
-
-
       <div
-        className={`flex items-center gap-2 mt-4 ${
+        className={`flex items-start gap-2 mt-4 ${
           currentStep === 2 ? 'flex' : 'hidden'
         }`}
       >
-        <input
-          type="text"
-          maxLength={7}
-          value={columnKey}
-          onChange={(e) =>{
-            console.log('typed:', e.target.value)
-            dispatch(setColumnKey(e.target.value))}}
-          className="flex-1 text-gray-300 bg-gray-700/50 rounded px-2 py-1 text-sm"
-        />
+        {/* INPUT + ERROR */}
+        <div className="flex-1">
+          <input
+            type="text"
+            maxLength={matrixColsLen}
+            value={columnKey}
+            onChange={(e) => {
+              dispatch(setColumnKey(e.target.value))
+            }}
+            className="w-full text-gray-300 bg-gray-700/50 rounded px-2 py-1 text-sm"
+          />
+
+          {/* ERROR TEXT */}
+          {showColsKeyError && (
+            <p className="mt-1 text-xs text-red-400">
+              Column key must be exactly {matrixColsLen} characters long.
+            </p>
+          )}
+        </div>
 
         <button
           className="px-3 text-sm py-[4px] rounded bg-blue-600 text-white hover:bg-blue-500"
@@ -331,10 +387,8 @@ export default function StepController() {
         >
           <TbPlayerTrackNextFilled />
         </button>
-
-
+        {/* ... dugmići ostaju isti */}
       </div>
-
 
     </div>
     </div>

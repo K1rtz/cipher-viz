@@ -2,10 +2,13 @@ import { createSlice } from '@reduxjs/toolkit'
 
 const initialState = {
   activeStep: 0,
+  matrixInfo:{
+    rowsLen: 7,
+    colsLen: 7,
+  },
   plainText: '',
   rowKey: '',
   columnKey: '',
-  nextSubstepSignal: false,
   rowsInfo:{
     substeps: [],
     currentStep: 0,
@@ -22,6 +25,12 @@ const stepInfoSlice = createSlice({
   name: 'stepInfo',
   initialState,
   reducers: {
+    setRowsLen: (state, action) => {
+      state.matrixInfo.rowsLen = action.payload.rowsLen;
+    },
+    setColsLen: (state, action) => {
+      state.matrixInfo.colsLen = action.payload.colsLen;
+    },
     setActiveStep: (state, action) => {
       state.activeStep = action.payload
     },
@@ -76,7 +85,9 @@ export const {
   setRowsCurrentStep,
   setRowsAdvanceNext,
   setColumnsAdvanceNext,
-  setColumnsSubsteps
+  setColumnsSubsteps,
+  setColsLen,
+  setRowsLen,
 } = stepInfoSlice.actions
 
 export default stepInfoSlice.reducer

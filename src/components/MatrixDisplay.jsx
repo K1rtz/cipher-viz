@@ -14,11 +14,7 @@ import {setRowsAdvanceNext, setColumnsAdvanceNext} from './../store/reducers/ste
 export default function MatrixDisplay({ rows = 7, cols = 7 }) {
 
   const activeStep = useSelector(selectActiveStep);
-  // const prevStepState = useState(activeStep)[0]; // za jednostavnost
   const plainText = useSelector(selectPlainText);
-  // const rowKey = useSelector(selectRowKey);
-  // const columnKey = useSelector(selectColumnKey);
-  // const nextSubstep = useSelector(selectNextSubstepSignal);
   const rowsInfo = useSelector(selectRowsInfo);
   const columnsInfo = useSelector(selectColumnsInfo);
 
@@ -150,7 +146,7 @@ export default function MatrixDisplay({ rows = 7, cols = 7 }) {
                 key={header.id}
                 layout
                 animate={{
-                  backgroundColor: fixedColumns[c]
+                  backgroundColor: fixedColumns[c] && activeStep > 1
                     ? 'rgb(22 163 74)'      // green-600
                     : 'rgba(31, 41, 55, 0.3)', // gray-800/30
                   color: fixedColumns[c] ? '#fff' : '#d1d5db'
@@ -174,7 +170,7 @@ export default function MatrixDisplay({ rows = 7, cols = 7 }) {
                 <motion.div
                   layout
                   animate={{
-                    backgroundColor: fixedRows[r]
+                    backgroundColor: fixedRows[r] && activeStep > 0
                       ? 'rgb(22 163 74)'          // green-600
                       : 'rgba(31, 41, 55, 0.3)',  // gray-800/30
                     color: fixedRows[r] ? '#ffffff' : '#d1d5db',
