@@ -9,3 +9,5 @@ export const selectRowsCurrentStep = (state) => state.stepInfo.rowsInfo.currentS
 export const selectRowsSubsteps = (state) => state.stepInfo.rowsInfo.substeps
 export const selectColumnsCurrentStep = (state) => state.stepInfo.columnsInfo.currentStep
 export const selectColumnsSubsteps = (state) => state.stepInfo.columnsInfo.substeps
+export const selectMatrixColsLen = (state) => state.stepInfo.matrixInfo.colsLen
+export const selectMatrixRowsLen = (state) => state.stepInfo.matrixInfo.rowsLen

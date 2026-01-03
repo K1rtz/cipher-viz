@@ -10,6 +10,8 @@ import {
   selectRowsSubsteps,
   selectColumnsCurrentStep,
   selectColumnsSubsteps,
+  selectMatrixColsLen,
+  selectMatrixRowsLen,
 } from './../store/selectors/stepInfoSelector.js'
 import { setActiveStep, setPlainText, setRowKey, setColumnKey, setRowsSubsteps, setRowsCurrentStep, setRowsAdvanceNext, setColumnsCurrentStep, setColumnsSubsteps, setColumnsAdvanceNext} from './../store/reducers/stepInfoReducer'
 import { BiSolidRightArrow } from "react-icons/bi";
@@ -21,41 +23,51 @@ export default function StepController() {
   const steps = [
     {
       id: 1,
-      title: 'Unos poruke',
-      description: 'Unesite tekst koji će biti šifrovan korišćenjem metode dvostruke transpozicije.',
-      keyText: 'Poruka:'
+      title: 'Input Text',
+      description:
+        'Enter the original message that will be encrypted using the Double Transposition cipher. ' +
+        'This text will be placed sequentially into the matrix row by row and serves as the starting point of the encryption process.',
+      keyText: 'Message:'
     },
     {
       id: 2,
-      title: 'Permutacije redova',
-      description: 'Unesite ključ na osnovu kog će se izvršiti permutacija redova matrice.',
-      keyText: 'Ključ:'
+      title: 'Row Permutation',
+      description:
+        'Provide a numerical key that defines how the rows of the matrix will be rearranged. ' +
+        'Each digit in the key represents the new position of a row, allowing you to observe step-by-step how row permutations affect the structure of the message.',
+      keyText: 'Key:'
     },
     {
       id: 3,
-      title: 'Permutacije kolona',
-      description: 'Unesite ključ na osnovu kog će se izvršiti permutacija kolona matrice.',
-      keyText: 'Ključ:'
+      title: 'Column Permutation',
+      description:
+        'Provide a numerical key that determines the reordering of the matrix columns. ' +
+        'After rows have been permuted, the same principle is applied to columns, further obscuring the original message and increasing the security of the cipher.',
+      keyText: 'Key:'
     },
     {
       id: 4,
-      title: 'Šifrovana poruka',
-      description: 'Prikaz konačne šifrovane poruke dobijene nakon obe transpozicije.',
+      title: 'Encrypted Output',
+      description:
+        'This step displays the final encrypted message obtained after completing both row and column transpositions. ' +
+        'The resulting ciphertext illustrates how double transposition significantly changes the original text while preserving all characters.',
       keyText: ''
     }
   ];
+
   const dispatch = useDispatch()
   const rowsCurrentStep = useSelector(selectRowsCurrentStep)
   const rowsSubsteps = useSelector(selectRowsSubsteps)
   const columnsCurrentStep = useSelector(selectColumnsCurrentStep)
   const columnsSubsteps = useSelector(selectColumnsSubsteps)
-
+  const matrixColsLen = useSelector(selectMatrixColsLen)
+  const matrixRowsLen = useSelector(selectMatrixRowsLen)
+  const maxLen = matrixColsLen * matrixRowsLen;
 
   const currentStep = useSelector(selectActiveStep)
   const plainText = useSelector(selectPlainText)
   const rowKey = useSelector(selectRowKey)
   const columnKey = useSelector(selectColumnKey)
-  const nextSubstepSignal = useSelector(selectNextSubstepSignal)
 
 
   const handlePrevious = () => {
@@ -63,9 +75,33 @@ export default function StepController() {
       dispatch(setActiveStep(currentStep - 1))
   };
 
+
+  function keyToNumberArray(key) {
+    const chars = key.split('');
+
+    const indexedChars = chars.map((char, idx) => ({ char, idx }));
+
+    const sorted = [...indexedChars].sort((a, b) => {
+      if (a.char < b.char) return -1;
+      if (a.char > b.char) return 1;
+      return a.idx - b.idx;
+    });
+
+    const orderMap = new Array(key.length);
+    sorted.forEach((item, i) => {
+      orderMap[item.idx] = i;
+    });
+
+    return orderMap;
+  }
+
   function generateSubsteps(key) {
+    console.log(key)
     const n = key.length;
-    const target = key.split('').map(Number);
+    console.log(keyToNumberArray(key))
+    // const target = key.split('').map(Number);
+    const target = keyToNumberArray(key)
+    console.log(target)
     const steps = [];
 
     const current = Array.from({ length: n }, (_, i) => i);
@@ -83,6 +119,15 @@ export default function StepController() {
   }
 
   const handleGenerateRowSubsteps = () =>{
+
+    if(rowKey.length !== matrixRowsLen){
+      setShowRowsKeyError(true)
+      return
+    }
+    if(showRowsKeyError){
+      setShowRowsKeyError(false);
+    }
+
   if(!rowKey || rowKey.length === 0) return
     const substeps = generateSubsteps(rowKey)
 
@@ -91,8 +136,18 @@ export default function StepController() {
     dispatch(setRowsCurrentStep(0))
     dispatch(setRowsAdvanceNext(true))
   }
+  const [showColsKeyError, setShowColsKeyError] = useState(false)
+  const [showRowsKeyError, setShowRowsKeyError] = useState(false)
 
   const handleGenerateColumnSubsteps = () =>{
+    if(columnKey.length !== matrixColsLen){
+      console.log('xdd nisu iste duzine')
+      setShowColsKeyError(true)
+      return
+    }
+    if(showColsKeyError){
+      setShowColsKeyError(false);
+    }
     if(!columnKey || columnKey.length === 0) return
     const substeps = generateSubsteps(columnKey)
 
@@ -139,30 +194,64 @@ export default function StepController() {
         </div>
       </div>
       <p className="text-gray-300 text-sm leading-relaxed">{steps[currentStep].description}</p>
-      <input type='text'
-             maxLength={49}
-             value={plainText}
-             onChange={(e) => dispatch(setPlainText(e.target.value.toUpperCase())) }
-             className={`text-gray-300 bg-gray-700/50 w-full uppercase mt-2  ${currentStep === 0 ? 'flex' : 'hidden'} rounded-[4px] px-2 py-1 text-sm leading-relaxed `}></input>
+      <div className={`flex items-center gap-2 mt-4 ${currentStep === 0 ? 'flex' : 'hidden'}`}>
 
-      <div
-        className={`flex items-center gap-2 mt-4 ${
-          currentStep === 1 ? 'flex' : 'hidden'
-        }`}
-      >
-        <input
-          type="text"
-          maxLength={7}
-          value={rowKey}
-          onChange={(e) => dispatch(setRowKey(e.target.value))}
-          className="flex-1 text-gray-300 bg-gray-700/50 rounded px-2 py-1 text-sm"
-        />
+        <div className="relative flex-1">
+          <input
+            type="text"
+            maxLength={maxLen}
+            value={plainText}
+            onChange={(e) =>
+              dispatch(setPlainText(e.target.value.toUpperCase()))
+            }
+            className="w-full text-gray-300 bg-gray-700/50 rounded px-2 py-1 pr-14 text-sm"
+          />
+
+          <span className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-xs text-gray-400">
+    {plainText.length}/{maxLen}
+  </span>
+        </div>
 
         <button
           className="px-3 text-sm py-[4px] rounded bg-blue-600 text-white hover:bg-blue-500"
           onClick={handleGenerateRowSubsteps}
         >
-          Potvrdi
+          Confirm
+        </button>
+      </div>
+
+      <div
+        className={`flex items-start gap-2 mt-4 ${
+          currentStep === 1 ? 'flex' : 'hidden'
+        }`}
+      >
+
+        <div className="flex-1">
+          <input
+            type="text"
+            maxLength={matrixRowsLen}
+            value={rowKey}
+            onChange={(e) => {
+              dispatch(setRowKey(e.target.value))
+            }}
+            className="w-full text-gray-300 bg-gray-700/50 rounded px-2 py-1 text-sm"
+          />
+
+          {/* ERROR TEXT */}
+          {showRowsKeyError && (
+            <p className="mt-1 text-xs text-red-400">
+              Rows key must be exactly {matrixRowsLen} characters long.
+            </p>
+          )}
+        </div>
+
+
+
+        <button
+          className="px-3 text-sm py-[4px] rounded bg-blue-600 text-white hover:bg-blue-500"
+          onClick={handleGenerateRowSubsteps}
+        >
+          Confirm
         </button>
         <button
           className="px-2 py-[6px] rounded bg-gray-700 text-gray-200 hover:bg-gray-600"
@@ -170,7 +259,6 @@ export default function StepController() {
             console.log(rowsCurrentStep);
             if(rowsCurrentStep !== 0) {
               dispatch(setRowsCurrentStep(0))
-              // dispatch(setNextSubstepSignal(!nextSubstepSignal))
               dispatch(setRowsAdvanceNext(true))
 
             }
@@ -179,21 +267,18 @@ export default function StepController() {
         >
           <TbPlayerTrackPrevFilled />
         </button>
-
         <button
           className="px-2 py-[6px] rounded bg-gray-700 text-gray-200 hover:bg-gray-600"
           onClick={() =>{
             console.log(rowsCurrentStep);
             if(rowsCurrentStep > 0) {
               dispatch(setRowsCurrentStep(rowsCurrentStep - 1))
-              // dispatch(setNextSubstepSignal(!nextSubstepSignal))
               dispatch(setRowsAdvanceNext(true))
 
             }
           }}>
           <BiSolidLeftArrow/>
         </button>
-
         <button
           className="px-2 py-[6px] rounded bg-gray-700 text-gray-200 hover:bg-gray-600"
           onClick={() =>{
@@ -204,9 +289,7 @@ export default function StepController() {
             }
           }}>
           <BiSolidRightArrow />
-
         </button>
-
         <button
           className="px-2 py-[6px] rounded bg-gray-700 text-gray-200 hover:bg-gray-600"
           onClick={() =>{
@@ -219,25 +302,31 @@ export default function StepController() {
         >
           <TbPlayerTrackNextFilled />
         </button>
-
-
       </div>
-
-
       <div
-        className={`flex items-center gap-2 mt-4 ${
+        className={`flex items-start gap-2 mt-4 ${
           currentStep === 2 ? 'flex' : 'hidden'
         }`}
       >
-        <input
-          type="text"
-          maxLength={7}
-          value={columnKey}
-          onChange={(e) =>{
-            console.log('typed:', e.target.value)
-            dispatch(setColumnKey(e.target.value))}}
-          className="flex-1 text-gray-300 bg-gray-700/50 rounded px-2 py-1 text-sm"
-        />
+        {/* INPUT + ERROR */}
+        <div className="flex-1">
+          <input
+            type="text"
+            maxLength={matrixColsLen}
+            value={columnKey}
+            onChange={(e) => {
+              dispatch(setColumnKey(e.target.value))
+            }}
+            className="w-full text-gray-300 bg-gray-700/50 rounded px-2 py-1 text-sm"
+          />
+
+          {/* ERROR TEXT */}
+          {showColsKeyError && (
+            <p className="mt-1 text-xs text-red-400">
+              Column key must be exactly {matrixColsLen} characters long.
+            </p>
+          )}
+        </div>
 
         <button
           className="px-3 text-sm py-[4px] rounded bg-blue-600 text-white hover:bg-blue-500"
@@ -298,10 +387,8 @@ export default function StepController() {
         >
           <TbPlayerTrackNextFilled />
         </button>
-
-
+        {/* ... dugmići ostaju isti */}
       </div>
-
 
     </div>
     </div>
