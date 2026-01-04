@@ -74,10 +74,9 @@ function EncryptForm() {
             <div className="flex rounded-lg overflow-hidden border border-gray-700">
               <button
                 onClick={() => {
-                  updateConfig("mode", "encrypt")
+                  updateConfig("mode", "encrypt");
                   setMode(!mode);
-                }
-                }
+                }}
                 className={`px-4 py-1 text-sm transition-colors ${
                   config.mode === "encrypt"
                     ? "bg-blue-600 text-white"
@@ -87,10 +86,10 @@ function EncryptForm() {
                 Encrypt
               </button>
               <button
-                onClick={
-                () => {updateConfig("mode", "decrypt")
+                onClick={() => {
+                  updateConfig("mode", "decrypt");
                   setMode(!mode);
-              }}
+                }}
                 className={`px-4 py-1 text-sm transition-colors ${
                   config.mode === "decrypt"
                     ? "bg-blue-600 text-white"
@@ -105,20 +104,18 @@ function EncryptForm() {
           {/* Inputs */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <div className='flex justify-between'>
-
-              <label className="block text-sm text-gray-300 mb-1">
-                {config.mode === "encrypt" ? "Plain text" : "Cipher text"}
-              </label>
-              <label className="block text-sm text-gray-300 mb-1">
+              <div className="flex justify-between">
+                <label className="block text-sm text-gray-300 mb-1">
+                  {config.mode === "encrypt" ? "Plain text" : "Cipher text"}
+                </label>
+                <label className="block text-sm text-gray-300 mb-1">
                   len: {plainText.length.toLocaleString()}
-              </label>
+                </label>
               </div>
+
               <textarea
                 value={plainText}
-                onChange={(e) =>
-                  setPlainText(e.target.value)
-                }
+                onChange={(e) => setPlainText(e.target.value)}
                 rows={6}
                 className="w-full text-gray-200 bg-gray-800/60 rounded-lg px-3 py-2 border border-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
@@ -148,15 +145,13 @@ function EncryptForm() {
         </div>
       </div>
 
-      {/* Settings */}
+      {/* Encryption settings */}
       <div className="mt-6 px-6 pt-4">
         <h3 className="text-md border-t pt-2 font-semibold border-gray-700/50 text-gray-300 mb-3">
           Encryption settings
         </h3>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-
-
           <div>
             <label className="block text-xs text-gray-400 mb-1">
               Rows permutation key
@@ -164,11 +159,8 @@ function EncryptForm() {
             <input
               type="text"
               value={config.rowKey}
-              onChange={(e) =>
-                updateConfig("rowKey", e.target.value)
-              }
-              className="w-full bg-gray-800/60 text-gray-200 placeholder:text-gray-600  px-2 py-1 rounded border border-gray-700"
-              placeholder="rows key"
+              onChange={(e) => updateConfig("rowKey", e.target.value)}
+              className="w-full bg-gray-800/60 text-gray-200 px-2 py-1 rounded border border-gray-700"
             />
           </div>
 
@@ -179,28 +171,9 @@ function EncryptForm() {
             <input
               type="text"
               value={config.columnKey}
-              onChange={(e) =>
-                updateConfig("columnKey", e.target.value)
-              }
-              className="w-full bg-gray-800/60 placeholder:text-gray-600 text-gray-200 px-2 py-1 rounded border border-gray-700"
-              placeholder="columns key"
-            />
-          </div>
-
-          <div>
-            <label className="block text-xs text-gray-400 mb-1">
-              Transposition order
-            </label>
-            <select
-              value={config.transpositionOrder}
-              onChange={(e) =>
-                updateConfig("transpositionOrder", e.target.value)
-              }
+              onChange={(e) => updateConfig("columnKey", e.target.value)}
               className="w-full bg-gray-800/60 text-gray-200 px-2 py-1 rounded border border-gray-700"
-            >
-              <option value="rows-first">Rows → Columns</option>
-              <option value="cols-first">Columns → Rows</option>
-            </select>
+            />
           </div>
 
           <div>
@@ -233,7 +206,6 @@ function EncryptForm() {
                   updateConfig("paddingChar", e.target.value)
                 }
                 disabled={config.paddingStrategy !== "fixed"}
-                placeholder="X"
                 className={`px-2 py-1 rounded border ${
                   config.paddingStrategy === "fixed"
                     ? "bg-gray-800/60 text-gray-200 border-gray-700"
@@ -242,42 +214,44 @@ function EncryptForm() {
               />
             </div>
           </div>
+        </div>
+      </div>
 
-          <div>
-            <label className="block text-xs text-gray-400 mb-2">
-              Text preprocessing
-            </label>
+      {/* Text preprocessing */}
+      <div className="mt-4 px-6">
+        <h3 className="text-md font-semibold text-gray-300 mb-3">
+          Text preprocessing
+        </h3>
 
-            <div className="flex gap-4">
-              <label className="flex items-center gap-2 text-sm text-gray-300 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={config.uppercase}
-                  onChange={(e) =>
-                    updateConfig("uppercase", e.target.checked)
-                  }
-                  className="w-4 h-4"
-                />
-                Convert to uppercase
-              </label>
+        <div className="flex gap-6">
+          <label className="flex items-center gap-2 text-sm text-gray-300 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={config.uppercase}
+              onChange={(e) =>
+                updateConfig("uppercase", e.target.checked)
+              }
+              className="w-4 h-4"
+            />
+            Convert to uppercase
+          </label>
 
-              <label className="flex items-center gap-2 text-sm text-gray-300 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={config.removeSpaces}
-                  onChange={(e) =>
-                    updateConfig("removeSpaces", e.target.checked)
-                  }
-                  className="w-4 h-4"
-                />
-                Remove spaces
-              </label>
-            </div>
-          </div>
+          <label className="flex items-center gap-2 text-sm text-gray-300 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={config.removeSpaces}
+              onChange={(e) =>
+                updateConfig("removeSpaces", e.target.checked)
+              }
+              className="w-4 h-4"
+            />
+            Remove spaces
+          </label>
         </div>
       </div>
     </div>
   );
+
 }
 
 export default EncryptForm;

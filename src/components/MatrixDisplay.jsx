@@ -147,7 +147,7 @@ export default function MatrixDisplay({ rows = 7, cols = 7 }) {
                 layout
                 animate={{
                   backgroundColor: fixedColumns[c] && activeStep > 1
-                    ? 'rgb(22 163 74)'      // green-600
+                    ? 'rgb(15,127,55)'      // green-600
                     : 'rgba(31, 41, 55, 0.3)', // gray-800/30
                   color: fixedColumns[c] ? '#fff' : '#d1d5db'
                 }}
@@ -171,8 +171,8 @@ export default function MatrixDisplay({ rows = 7, cols = 7 }) {
                   layout
                   animate={{
                     backgroundColor: fixedRows[r] && activeStep > 0
-                      ? 'rgb(22 163 74)'          // green-600
-                      : 'rgba(31, 41, 55, 0.3)',  // gray-800/30
+                      ? 'rgb(15,127,55)'          // green-600 //'rgb(22 163 74)' //'rgba(18,18,228,0.3)'
+                      : 'rgba(31, 41, 55, 0.3)',  // gray-800/30 //'rgba(31, 41, 55, 0.3)'
                     color: fixedRows[r] ? '#ffffff' : '#d1d5db',
                   }}
                   transition={{
@@ -194,7 +194,7 @@ export default function MatrixDisplay({ rows = 7, cols = 7 }) {
                     layout
                     transition={{ type: 'spring', stiffness: 80, damping: 20 }}
                     className={`flex items-center justify-center rounded-lg font-mono text-xl border font-bold transition-colors duration-300 ease-out border-gray-700/50 ${
-                      tile.value === ' ' && activeStep == '0' ? 'bg-gray-800/50 text-gray-600' : 'bg-blue-600 text-white border-blue-400 shadow-md'
+                      tile.value === ' ' && activeStep == '0' ? 'bg-gray-800/50 text-gray-600' : 'bg-blue-800/90 text-white border-blue-400 shadow-md'
                     }`}
                     style={{ width: 64, height: 64 }}
                   >

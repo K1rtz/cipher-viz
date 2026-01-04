@@ -202,7 +202,7 @@ export default function StepController() {
             maxLength={maxLen}
             value={plainText}
             onChange={(e) =>
-              dispatch(setPlainText(e.target.value.toUpperCase()))
+              dispatch(setPlainText(e.target.value.toUpperCase().replace(/\s+/g, '')))
             }
             className="w-full text-gray-300 bg-gray-700/50 rounded px-2 py-1 pr-14 text-sm"
           />
@@ -214,7 +214,7 @@ export default function StepController() {
 
         <button
           className="px-3 text-sm py-[4px] rounded bg-blue-600 text-white hover:bg-blue-500"
-          onClick={handleGenerateRowSubsteps}
+          //onClick={}
         >
           Confirm
         </button>
