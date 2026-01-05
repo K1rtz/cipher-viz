@@ -82,6 +82,7 @@ export default function MatrixDisplay({ rows = 7, cols = 7 }) {
   };
 
 
+
   useEffect(() => {
     if (!rowsInfo.advanceNext) return;
     if (!rowsInfo.substeps.length) return;

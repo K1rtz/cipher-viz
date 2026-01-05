@@ -136,8 +136,10 @@ export default function StepController() {
     dispatch(setRowsCurrentStep(0))
     dispatch(setRowsAdvanceNext(true))
   }
+
   const [showColsKeyError, setShowColsKeyError] = useState(false)
   const [showRowsKeyError, setShowRowsKeyError] = useState(false)
+  const [showPlainTextError, setShowPlainTextError] = useState(false)
 
   const handleGenerateColumnSubsteps = () =>{
     if(columnKey.length !== matrixColsLen){
@@ -157,6 +159,14 @@ export default function StepController() {
   }
 
   const handleNext = () => {
+    if(currentStep === 0 && plainText.length === 0){
+      setShowPlainTextError(true);
+      return
+    }
+    if(showPlainTextError){
+      setShowPlainTextError(false);
+    }
+
     if (currentStep < steps.length - 1)
     dispatch(setActiveStep(currentStep + 1))
   };
@@ -194,10 +204,13 @@ export default function StepController() {
         </div>
       </div>
       <p className="text-gray-300 text-sm leading-relaxed">{steps[currentStep].description}</p>
-      <div className={`flex items-center gap-2 mt-4 ${currentStep === 0 ? 'flex' : 'hidden'}`}>
+      <div className={`flex items-start gap-2 mt-4 ${currentStep === 0 ? 'flex' : 'hidden'}`}>
 
         <div className="relative flex-1">
-          <input
+          <div className='flex-1'>
+            <div className="relative flex-1">
+
+            <input
             type="text"
             maxLength={maxLen}
             value={plainText}
@@ -206,10 +219,18 @@ export default function StepController() {
             }
             className="w-full text-gray-300 bg-gray-700/50 rounded px-2 py-1 pr-14 text-sm"
           />
-
           <span className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-xs text-gray-400">
-    {plainText.length}/{maxLen}
-  </span>
+            {plainText.length}/{maxLen}
+          </span>
+            </div>
+            {showPlainTextError && (
+              <p className="mt-1 text-xs text-red-400">
+                Message field is empty!
+              </p>
+            )}
+
+          </div>
+
         </div>
 
         <button
