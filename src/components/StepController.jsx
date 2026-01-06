@@ -158,13 +158,39 @@ export default function StepController() {
     dispatch(setColumnsAdvanceNext(true))
   }
 
-  const handleNext = () => {
+  const handleNext = () => { //TODO big fixes 07.01.2026
     if(currentStep === 0 && plainText.length === 0){
       setShowPlainTextError(true);
       return
     }
+    if(currentStep === 1 && rowKey.length !== matrixRowsLen){
+      setShowRowsKeyError(true)
+      return
+    }
+    if(currentStep === 2 && columnKey.length !== matrixColsLen){
+      setShowColsKeyError(true)
+      return
+    }
+    if(currentStep === 1){
+      if(rowsCurrentStep !== rowsSubsteps.length-1){
+      dispatch(setRowsCurrentStep(rowsSubsteps.length -1))
+      dispatch(setRowsAdvanceNext(true))
+      }
+    }
+    if(currentStep === 2){
+      if(columnsCurrentStep !== columnsSubsteps.length-1){
+        dispatch(setColumnsCurrentStep(columnsSubsteps.length -1))
+        dispatch(setColumnsAdvanceNext(true))
+      }
+    }
+    if(showColsKeyError){
+      setShowColsKeyError(false)
+    }
     if(showPlainTextError){
       setShowPlainTextError(false);
+    }
+    if(showRowsKeyError){
+      setShowRowsKeyError(false)
     }
 
     if (currentStep < steps.length - 1)
