@@ -70,10 +70,7 @@ export default function StepController() {
   const columnKey = useSelector(selectColumnKey)
 
 
-  const handlePrevious = () => {
-    if (currentStep > 0)
-      dispatch(setActiveStep(currentStep - 1))
-  };
+
 
 
   function keyToNumberArray(key) {
@@ -158,6 +155,23 @@ export default function StepController() {
     dispatch(setColumnsAdvanceNext(true))
   }
 
+
+
+  const handlePrevious = () => {
+    if (currentStep > 0)
+      dispatch(setActiveStep(currentStep - 1))
+    console.log(currentStep)
+    if(currentStep === 2) {
+      dispatch(setColumnsCurrentStep(0))
+      dispatch(setColumnsAdvanceNext(true))
+    }
+    if(currentStep === 1){
+      dispatch(setRowsCurrentStep(0))
+      dispatch(setRowsAdvanceNext(true))
+    }
+  };
+
+
   const handleNext = () => { //TODO big fixes 07.01.2026
     if(currentStep === 0 && plainText.length === 0){
       setShowPlainTextError(true);
@@ -171,11 +185,15 @@ export default function StepController() {
       setShowColsKeyError(true)
       return
     }
+
     if(currentStep === 1){
-      if(rowsCurrentStep !== rowsSubsteps.length-1){
-      dispatch(setRowsCurrentStep(rowsSubsteps.length -1))
-      dispatch(setRowsAdvanceNext(true))
+      if(rowsCurrentStep !== rowsSubsteps.length-1) {
+        dispatch(setRowsCurrentStep(rowsSubsteps.length - 1))
+        dispatch(setRowsAdvanceNext(true))
       }
+      // }
+
+       // }
     }
     if(currentStep === 2){
       if(columnsCurrentStep !== columnsSubsteps.length-1){
