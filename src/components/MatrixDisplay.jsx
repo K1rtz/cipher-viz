@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from 'react';
+import React, {useEffect, useState, useMemo, useRef} from 'react';
 import { motion } from 'framer-motion';
 import { useSelector, useDispatch } from 'react-redux';
 import {
@@ -7,9 +7,14 @@ import {
   selectRowKey,
   selectColumnKey,
   selectNextSubstepSignal,
-  selectRowsInfo, selectColumnsInfo,
+  selectKeyRaw,
+  selectCurrentStep,
+  selectRowsInfo,
+  selectColumnsInfo,
+  selectStepChange,
 } from './../store/selectors/stepInfoSelector.js';
 import {setRowsAdvanceNext, setColumnsAdvanceNext} from './../store/reducers/stepInfoReducer'
+// import {selectKeyRaw} from "../store/selectors/stepInfoSelector.js";
 
 export default function MatrixDisplay({ rows = 7, cols = 7 }) {
 
@@ -17,7 +22,8 @@ export default function MatrixDisplay({ rows = 7, cols = 7 }) {
   const plainText = useSelector(selectPlainText);
   const rowsInfo = useSelector(selectRowsInfo);
   const columnsInfo = useSelector(selectColumnsInfo);
-
+  const currentStep = useSelector(selectCurrentStep);
+  const keyRaw = useSelector(selectKeyRaw);
   // Inicijalni tiles sa stabilnim colId
   const [matrixRows, setMatrixRows] = useState(
     Array.from({ length: rows }, (_, r) => ({
@@ -29,6 +35,99 @@ export default function MatrixDisplay({ rows = 7, cols = 7 }) {
       })),
     }))
   );
+
+  const stepChange = useSelector(selectStepChange);
+
+  const swapRowsByPosition = (i, j) => {
+    setRowHeaders(prev => {
+      const next = [...prev];
+      [next[i], next[j]] = [next[j], next[i]];
+      return next;
+    });
+
+    setMatrixRows(prev => {
+      const next = [...prev];
+      [next[i], next[j]] = [next[j], next[i]];
+      return next;
+    });
+  };
+
+  const swapColumnsByPosition = (i, j) => {
+    setColumnHeaders(prev => {
+      const next = [...prev];
+      [next[i], next[j]] = [next[j], next[i]];
+      return next;
+    });
+
+    setMatrixRows(prev =>
+      prev.map(row => {
+        const nextTiles = [...row.tiles];
+        [nextTiles[i], nextTiles[j]] = [nextTiles[j], nextTiles[i]];
+        return { ...row, tiles: nextTiles };
+      })
+    );
+  };
+  const getPair = (step) => {
+    const i = step * 2;
+    return [
+      Number(keyRaw[i]),
+      Number(keyRaw[i + 1]),
+    ];
+  };
+
+  const applyStep = (step) => {
+    if (step < 0) return;
+    const [x, y] = getPair(step);
+
+    step % 2 === 0
+      ? swapRowsByPosition(x, y)
+      : swapColumnsByPosition(x, y);
+  };
+
+  const undoStep = (step) => {
+    if (step < 0) return;
+    const [x, y] = getPair(step);
+
+    // swap je involucija → isto kao apply
+    step % 2 === 0
+      ? swapRowsByPosition(x, y)
+      : swapColumnsByPosition(x, y);
+  };
+
+  const prevStepRef = useRef(currentStep);
+
+  useEffect(() => {
+
+    const prev = prevStepRef.current;
+    prevStepRef.current = currentStep;
+
+    if (prev === currentStep) return;
+
+    if (currentStep > prev) {
+      applyStep(currentStep);
+    } else {
+      undoStep(prev);
+    }
+    // console.log(currentStep);
+    // console.log(keyRaw)
+    //
+    //
+    // const indices = keyRaw.slice(currentStep * 2, currentStep * 2 + 2);
+    // const x = indices[0]
+    // const y = indices[1]
+    //
+    // if(currentStep === 0 || currentStep % 2 === 0){
+    //   swapRowsByPosition(x,y)
+    // }else{
+    //   swapColumnsByPosition(x,y)
+    // }
+    //
+
+  },[currentStep])
+  // },[stepChange])
+
+
+
 
   const [rowHeaders, setRowHeaders] = useState(
     Array.from({ length: rows }, (_, i) => ({ id: i, label: i }))
@@ -84,6 +183,10 @@ export default function MatrixDisplay({ rows = 7, cols = 7 }) {
 
 
   useEffect(() => {
+    console.log('xdd')
+    console.log(rowsInfo.advanceNext);
+    console.log(rowsInfo.substeps.length);
+
     if (!rowsInfo.advanceNext) return;
     if (!rowsInfo.substeps.length) return;
 

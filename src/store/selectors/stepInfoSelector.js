@@ -11,3 +11,6 @@ export const selectColumnsCurrentStep = (state) => state.stepInfo.columnsInfo.cu
 export const selectColumnsSubsteps = (state) => state.stepInfo.columnsInfo.substeps
 export const selectMatrixColsLen = (state) => state.stepInfo.matrixInfo.colsLen
 export const selectMatrixRowsLen = (state) => state.stepInfo.matrixInfo.rowsLen
+export const selectCurrentStep = (state) => state.stepInfo.currentStep
+export const selectKeyRaw = (state) => state.stepInfo.keyRaw
+export const selectStepChange = (state) => state.stepInfo.stepChange

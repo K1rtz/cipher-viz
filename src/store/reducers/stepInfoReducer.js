@@ -2,6 +2,9 @@ import { createSlice } from '@reduxjs/toolkit'
 
 const initialState = {
   activeStep: 0,
+  currentStep: 0,
+  keyRaw: "",
+  stepChange: false,
   matrixInfo:{
     rowsLen: 7,
     colsLen: 7,
@@ -25,6 +28,15 @@ const stepInfoSlice = createSlice({
   name: 'stepInfo',
   initialState,
   reducers: {
+    setStepChange: (state, action) => {
+      state.stepChange = action.payload
+    },
+    setCurrentStep: (state, action) => {
+      state.currentStep = action.payload
+    },
+    setKeyRaw: (state, action) => {
+      state.keyRaw = action.payload
+    },
     setRowsLen: (state, action) => {
       state.matrixInfo.rowsLen = action.payload.rowsLen;
     },
@@ -88,6 +100,9 @@ export const {
   setColumnsSubsteps,
   setColsLen,
   setRowsLen,
+  setKeyRaw,
+  setCurrentStep,
+  setStepChange
 } = stepInfoSlice.actions
 
 export default stepInfoSlice.reducer
