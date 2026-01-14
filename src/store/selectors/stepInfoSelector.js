@@ -14,3 +14,4 @@ export const selectMatrixRowsLen = (state) => state.stepInfo.matrixInfo.rowsLen
 export const selectCurrentStep = (state) => state.stepInfo.currentStep
 export const selectKeyRaw = (state) => state.stepInfo.keyRaw
 export const selectStepChange = (state) => state.stepInfo.stepChange
+export const selectHighlightStep = (state) => state.stepInfo.highlightStep

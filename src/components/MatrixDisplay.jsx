@@ -4,17 +4,14 @@ import { useSelector, useDispatch } from 'react-redux';
 import {
   selectActiveStep,
   selectPlainText,
-  selectRowKey,
-  selectColumnKey,
-  selectNextSubstepSignal,
   selectKeyRaw,
   selectCurrentStep,
   selectRowsInfo,
   selectColumnsInfo,
   selectStepChange,
+  selectHighlightStep,
 } from './../store/selectors/stepInfoSelector.js';
 import {setRowsAdvanceNext, setColumnsAdvanceNext} from './../store/reducers/stepInfoReducer'
-// import {selectKeyRaw} from "../store/selectors/stepInfoSelector.js";
 
 export default function MatrixDisplay({ rows = 7, cols = 7 }) {
 
@@ -35,6 +32,19 @@ export default function MatrixDisplay({ rows = 7, cols = 7 }) {
       })),
     }))
   );
+
+  const highlightStep = useSelector(selectHighlightStep);
+
+  const highlightedPositions = useMemo(() => {
+    if (highlightStep == null) return null;
+
+    const x = keyRaw[highlightStep * 2];
+    const y = keyRaw[highlightStep * 2 + 1];
+
+    if (x == null || y == null) return null;
+
+    return [Number(x), Number(y)];
+  }, [highlightStep, keyRaw]);
 
   const stepChange = useSelector(selectStepChange);
 
@@ -97,7 +107,7 @@ export default function MatrixDisplay({ rows = 7, cols = 7 }) {
   const prevStepRef = useRef(currentStep);
 
   useEffect(() => {
-
+    console.log('Desil se promena, current stpe je:' + currentStep );
     const prev = prevStepRef.current;
     prevStepRef.current = currentStep;
 
@@ -108,23 +118,8 @@ export default function MatrixDisplay({ rows = 7, cols = 7 }) {
     } else {
       undoStep(prev);
     }
-    // console.log(currentStep);
-    // console.log(keyRaw)
-    //
-    //
-    // const indices = keyRaw.slice(currentStep * 2, currentStep * 2 + 2);
-    // const x = indices[0]
-    // const y = indices[1]
-    //
-    // if(currentStep === 0 || currentStep % 2 === 0){
-    //   swapRowsByPosition(x,y)
-    // }else{
-    //   swapColumnsByPosition(x,y)
-    // }
-    //
 
   },[currentStep])
-  // },[stepChange])
 
 
 
@@ -229,6 +224,8 @@ export default function MatrixDisplay({ rows = 7, cols = 7 }) {
     );
   }, [columnsInfo]);
 
+  const isRowStep = highlightStep % 2 === 0;
+
 
   /* ---------- RENDER ---------- */
   return (
@@ -245,39 +242,51 @@ export default function MatrixDisplay({ rows = 7, cols = 7 }) {
             <div />
 
             {/* Column headers */}
-            {columnHeaders.map((header, c) => (
-              <motion.div
-                key={header.id}
-                layout
-                animate={{
-                  backgroundColor: fixedColumns[c] && activeStep > 1
-                    ? 'rgb(15,127,55)'      // green-600
-                    : 'rgba(31, 41, 55, 0.3)', // gray-800/30
-                  color: fixedColumns[c] ? '#fff' : '#d1d5db'
-                }}
-                transition={{
-                  backgroundColor: { duration: 0.6 },
-                  color: { duration: 0.6 },
-                  layout: { type: 'spring', stiffness: 80, damping: 20 }
-                }}
-                className="flex items-center justify-center bg-gray-800/30 rounded-md border border-gray-700/50"
-                style={{ width: 64, height: 64 }}
-              >
-                {header.label}
-              </motion.div>
-            ))}
+            {columnHeaders.map((header, c) => {
+              const isHighlighted =
+                !isRowStep && highlightedPositions?.includes(c) && activeStep === 1;
+
+              return (
+                <motion.div
+                  key={header.id}
+                  layout
+                  animate={{
+                      backgroundColor: isHighlighted
+                      ? 'rgba(59,130,246,0.35)' // blue highlight
+                      : fixedColumns[c] && activeStep > 1
+                        ? 'rgb(15,127,55)'
+                        : 'rgba(31, 41, 55, 0.3)',
+                    color: isHighlighted ? '#fff' : fixedColumns[c] ? '#fff' : '#d1d5db',
+                  }}
+                  transition={{
+                    backgroundColor: { duration: 0.4 },
+                    layout: { type: 'spring', stiffness: 80, damping: 20 }
+                  }}
+                  className="flex items-center justify-center rounded-md border border-gray-700/50"
+                  style={{ width: 64, height: 64 }}
+                >
+                  {header.label}
+                </motion.div>
+              );
+            })}
 
             {/* Rows */}
-            {matrixRows.map((row, r) => (
+            {matrixRows.map((row, r) => {
+
+              const isHighlighted = isRowStep && highlightedPositions?.includes(r) && activeStep === 1;
+
+              return (
               <React.Fragment key={row.rowId}>
                 {/* Row header */}
                 <motion.div
                   layout
                   animate={{
-                    backgroundColor: fixedRows[r] && activeStep > 0
-                      ? 'rgb(15,127,55)'          // green-600 //'rgb(22 163 74)' //'rgba(18,18,228,0.3)'
-                      : 'rgba(31, 41, 55, 0.3)',  // gray-800/30 //'rgba(31, 41, 55, 0.3)'
-                    color: fixedRows[r] ? '#ffffff' : '#d1d5db',
+                    backgroundColor: isHighlighted
+                      ? 'rgba(59,130,246,0.35)'
+                      : fixedRows[r] && activeStep > 0
+                        ? 'rgb(15,127,55)'
+                        : 'rgba(31, 41, 55, 0.3)',
+                    color: isHighlighted ? '#fff' : fixedRows[r] ? '#fff' : '#d1d5db',
                   }}
                   transition={{
                     backgroundColor: { duration: 0.6 },
@@ -306,7 +315,7 @@ export default function MatrixDisplay({ rows = 7, cols = 7 }) {
                   </motion.div>
                 ))}
               </React.Fragment>
-            ))}
+            )})}
           </div>
         </div>
       </div>

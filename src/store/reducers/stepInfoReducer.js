@@ -2,8 +2,9 @@ import { createSlice } from '@reduxjs/toolkit'
 
 const initialState = {
   activeStep: 0,
-  currentStep: 0,
+  currentStep: -1,
   keyRaw: "",
+  highlightStep: -1,
   stepChange: false,
   matrixInfo:{
     rowsLen: 7,
@@ -28,6 +29,9 @@ const stepInfoSlice = createSlice({
   name: 'stepInfo',
   initialState,
   reducers: {
+    setHighlightStep(state, action) {
+      state.highlightStep = action.payload
+    },
     setStepChange: (state, action) => {
       state.stepChange = action.payload
     },
@@ -102,7 +106,8 @@ export const {
   setRowsLen,
   setKeyRaw,
   setCurrentStep,
-  setStepChange
+  setStepChange,
+  setHighlightStep
 } = stepInfoSlice.actions
 
 export default stepInfoSlice.reducer

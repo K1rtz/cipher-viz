@@ -12,9 +12,9 @@ import {
   selectColumnsSubsteps,
   selectMatrixColsLen,
   selectMatrixRowsLen,
-  selectStepChange, selectCurrentStep,
+  selectStepChange, selectCurrentStep, selectHighlightStep,
 } from './../store/selectors/stepInfoSelector.js'
-import { setActiveStep, setPlainText, setRowKey, setColumnKey, setStepChange, setCurrentStep, setKeyRaw, setRowsSubsteps, setRowsCurrentStep, setRowsAdvanceNext, setColumnsCurrentStep, setColumnsSubsteps, setColumnsAdvanceNext} from './../store/reducers/stepInfoReducer'
+import { setActiveStep, setPlainText, setRowKey, setColumnKey, setStepChange, setHighlightStep, setCurrentStep, setKeyRaw, setRowsSubsteps, setRowsCurrentStep, setRowsAdvanceNext, setColumnsCurrentStep, setColumnsSubsteps, setColumnsAdvanceNext} from './../store/reducers/stepInfoReducer'
 import { BiSolidRightArrow } from "react-icons/bi";
 import { BiSolidLeftArrow } from "react-icons/bi";
 // import { TbPlayerTrackPrevFilled } from "react-icons/tb";
@@ -24,7 +24,7 @@ export default function StepController() {
   const steps = [
     {
       id: 1,
-      title: 'Input Text',
+      title: 'Plain Text',
       description:
         'Enter the original message that will be encrypted using the Double Transposition cipher. ' +
         'This text will be placed sequentially into the matrix row by row and serves as the starting point of the encryption process.',
@@ -32,9 +32,10 @@ export default function StepController() {
     },
     {
       id: 2,
-      title: 'Row Permutation',
+      title: 'Transposition key and steps simulation',
       description:
-        'Provide a numerical key that defines how the rows of the matrix will be rearranged.',
+        'Enter a key with an even number of digits.  \n' +
+        '  Then simulate the transposition step by step using the left/right arrows.\n' + 'Highlighted pair represents previous swap.',
       keyText: 'Key:'
     },
     {
@@ -66,6 +67,8 @@ export default function StepController() {
 
   const [raw, setRaw] = useState('');
   const [formatted, setFormatted] = useState('');
+
+  const highlightStep = useSelector(selectHighlightStep)
 
 
 
@@ -134,9 +137,9 @@ export default function StepController() {
 
   const [activeIndex, setActiveIndex] = useState(0);
   const [lastMove, setLastMove] = useState(false);
-  useEffect(() => {
-    dispatch(setCurrentStep(activeIndex))
-  },[activeIndex])
+  // useEffect(() => {
+    // dispatch(setCurrentStep(activeIndex))
+  // },[activeIndex])
 
   const pairs = useMemo(() => {
     const result = [];
@@ -153,9 +156,19 @@ export default function StepController() {
     return result;
   }, [raw]);
 
-  const handleKeyConfirm = () =>{
+  const [confirmError, setConfirmError] = useState('');
 
+  const handleKeyConfirm = () =>{
+    // dispatch(setCurrentStep(-1))
+
+    console.log('trenutni current step onconfirm:' + currentStep)
+    if(raw.length == 0){
+      setConfirmError('Enter at least one pair of digits.')
+      setShowRowsKeyError(true)
+      return;
+    }
     if(raw.length % 2 === 1){
+      setConfirmError('Every digit in key must be paired.')
       setShowRowsKeyError(true)
       return;
     }
@@ -164,52 +177,15 @@ export default function StepController() {
     }
     setFormatted(formatAsPairs(raw));
     setKeyDisplay(true);
-
     dispatch(setKeyRaw(raw))
+    setKeyButtonDisabled(true);
   }
-
-
-  // const handleGenerateRowSubsteps = () =>{
-  //
-  //   if(rowKey.length !== matrixRowsLen){
-  //     setShowRowsKeyError(true)
-  //     return
-  //   }
-  //   if(showRowsKeyError){
-  //     setShowRowsKeyError(false);
-  //   }
-  //
-  // if(!rowKey || rowKey.length === 0) return
-  //   const substeps = generateSubsteps(rowKey)
-  //
-  //   console.log(substeps);
-  //   dispatch(setRowsSubsteps(substeps))
-  //   dispatch(setRowsCurrentStep(0))
-  //   dispatch(setRowsAdvanceNext(true))
-  // }
 
   const [showColsKeyError, setShowColsKeyError] = useState(false)
   const [showRowsKeyError, setShowRowsKeyError] = useState(false)
   const [showPlainTextError, setShowPlainTextError] = useState(false)
 
-  // const handleGenerateColumnSubsteps = () =>{
-  //   if(columnKey.length !== matrixColsLen){
-  //     console.log('xdd nisu iste duzine')
-  //     setShowColsKeyError(true)
-  //     return
-  //   }
-  //   if(showColsKeyError){
-  //     setShowColsKeyError(false);
-  //   }
-  //   if(!columnKey || columnKey.length === 0) return
-  //   const substeps = generateSubsteps(columnKey)
-  //
-  //   dispatch(setColumnsSubsteps(substeps))
-  //   dispatch(setColumnsCurrentStep(0))
-  //   dispatch(setColumnsAdvanceNext(true))
-  // }
-
-
+  const [keyButtonDisabled, setKeyButtonDisabled] = useState(false)
 
   const handlePrevious = () => {
     if (activeStep > 0)
@@ -231,23 +207,20 @@ export default function StepController() {
       setShowPlainTextError(true);
       return
     }
-    if(activeStep === 1 && rowKey.length !== matrixRowsLen){
-      setShowRowsKeyError(true)
-      return
-    }
-    if(activeStep === 2 && columnKey.length !== matrixColsLen){
-      setShowColsKeyError(true)
-      return
-    }
+    // if(activeStep === 1 && rowKey.length !== matrixRowsLen){
+    //   setShowRowsKeyError(true)
+    //   return
+    // }
+    // if(activeStep === 2 && columnKey.length !== matrixColsLen){
+    //   setShowColsKeyError(true)
+    //   return
+    // }
 
     if(activeStep === 1){
       if(rowsCurrentStep !== rowsSubsteps.length-1) {
         dispatch(setRowsCurrentStep(rowsSubsteps.length - 1))
         dispatch(setRowsAdvanceNext(true))
       }
-      // }
-
-       // }
     }
     if(activeStep === 2){
       if(columnsCurrentStep !== columnsSubsteps.length-1){
@@ -269,7 +242,6 @@ export default function StepController() {
     dispatch(setActiveStep(activeStep + 1))
   };
 
-  const [direction, setDirection] = useState(true);
 
   useEffect(() => {
     console.log('raw:', raw);
@@ -357,15 +329,9 @@ export default function StepController() {
                 {pairs.map((pair, i) => (
                   <span
                     key={i}
-                    className={`
-                    rounded-[2px] px-1
-                    ${i === currentStep
-                      ? ' text-blue-500 bg-blue-500/10'
-                      : 'text-gray-300'}
-                    `}
-                  >
-                    {pair}
-                    {i < pairs.length - 1 && ''}
+                    className={`inline-flex items-center justify-center rounded px-1 leading-none p-1
+                    ${i === highlightStep ? 'text-blue-400 bg-blue-500/10 border border-blue-400 font-bold' : 'text-gray-300'}`}                                  >
+                  {pair}
                 </span>
                 ))}
               </div>
@@ -374,12 +340,13 @@ export default function StepController() {
             type="text"
             value={formatAsPairs(raw)}
             onChange={(e) => {
-              const digitsOnly = e.target.value.replace(/[^0-9]/g, '');
+
+              const digitsOnly = e.target.value.replace(/[^0-6]/g, '');
               setRaw(digitsOnly);
             }}
             onKeyDown={(e) => {
               if (e.key === 'Backspace') {
-                e.preventDefault(); // sprečava default brisanje formatiranog teksta
+                e.preventDefault();
                 setRaw((prev) => prev.slice(0, -1));
               }
             }}
@@ -387,58 +354,40 @@ export default function StepController() {
           />
 
           }
-          {/* ERROR TEXT */}
           {showRowsKeyError && (
             <p className="mt-1 text-xs text-red-400">
-              Key values must be in pairs.
+              {confirmError}
             </p>
           )}
         </div>
 
 
-
         <button
-          className="px-3 text-sm py-[4px] rounded bg-blue-600 text-white hover:bg-blue-500"
+          className={`px-3 text-sm py-[4px] rounded text-white  ${keyButtonDisabled? 'bg-gray-800' : 'bg-blue-600 hover:bg-blue-500'} `}
+          disabled={keyButtonDisabled}
           onClick={handleKeyConfirm}//TODO nema vise generate substeps sad se substepovi unose rucno
         >
           Confirm
         </button>
         <button
-          className="px-2 py-[6px] rounded bg-gray-700 text-gray-200 hover:bg-gray-600"
+          className={`px-2 py-[6px] rounded text-gray-200  ${currentStep <= -1 ? 'bg-gray-600' : 'bg-blue-600'} `}
           disabled = {currentStep <= -1}
           onClick={() =>{
+            dispatch(setHighlightStep(currentStep));
+            console.log(currentStep-1)
             dispatch(setCurrentStep(currentStep - 1))
-            // if(direction === false) {
-            //
-            //   setActiveIndex((i) => Math.max(i - 1, 0));
-            //   console.log(activeIndex);
-            //   dispatch(setCurrentStep(activeIndex));
-            //   dispatch(setStepChange(!stepChange))
-            // }
-            // else {
-            //   dispatch(setStepChange(!stepChange));
-            // }
-            // setDirection(false);
           }}>
           <BiSolidLeftArrow/>
         </button>
         <button
-          className="px-2 py-[6px] rounded bg-gray-700 text-gray-200 hover:bg-gray-600"
+          className={`px-2 py-[6px] rounded text-gray-200  ${currentStep >= pairs.length - 1 ? 'bg-gray-600' : 'bg-blue-600'} `}
           disabled = {currentStep >= pairs.length - 1}
           onClick={() =>{
+            dispatch(setHighlightStep(currentStep + 1));
+            console.log(highlightStep)
+            console.log(currentStep+1)
             dispatch(setCurrentStep(currentStep + 1))
             console.log('right' + activeIndex)
-          //   if(direction === true) {
-          //
-          //     setActiveIndex((i) => Math.min(i + 1, pairs.length - 1))
-          //     console.log(activeIndex)
-          //     dispatch(setCurrentStep(activeIndex));
-          //     dispatch(setStepChange(!stepChange))
-          //   }
-          //   else {
-          //     dispatch(setStepChange(!stepChange))
-          //   }
-          //   setDirection(true)
           }}>
           <BiSolidRightArrow />
         </button>
