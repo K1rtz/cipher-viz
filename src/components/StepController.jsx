@@ -2,23 +2,15 @@ import React, {useEffect, useMemo, useState} from 'react';
 import { useSelector, useDispatch } from 'react-redux'
 import {
   selectActiveStep,
-  selectColumnKey,
   selectPlainText,
-  selectRowKey,
-  selectNextSubstepSignal,
-  selectRowsCurrentStep,
-  selectRowsSubsteps,
-  selectColumnsCurrentStep,
-  selectColumnsSubsteps,
   selectMatrixColsLen,
   selectMatrixRowsLen,
-  selectStepChange, selectCurrentStep, selectHighlightStep,
+  selectCurrentStep,
+  selectHighlightStep,
 } from './../store/selectors/stepInfoSelector.js'
-import { setActiveStep, setPlainText, setRowKey, setColumnKey, setStepChange, setHighlightStep, setCurrentStep, setKeyRaw, setRowsSubsteps, setRowsCurrentStep, setRowsAdvanceNext, setColumnsCurrentStep, setColumnsSubsteps, setColumnsAdvanceNext} from './../store/reducers/stepInfoReducer'
+import { setActiveStep, setPlainText, setHighlightStep, setCurrentStep, setKeyRaw, setHexText} from './../store/reducers/stepInfoReducer'
 import { BiSolidRightArrow } from "react-icons/bi";
 import { BiSolidLeftArrow } from "react-icons/bi";
-// import { TbPlayerTrackPrevFilled } from "react-icons/tb";
-// import { TbPlayerTrackNextFilled } from "react-icons/tb";
 
 export default function StepController() {
   const steps = [
@@ -49,21 +41,14 @@ export default function StepController() {
   ];
 
   const dispatch = useDispatch()
-  const rowsCurrentStep = useSelector(selectRowsCurrentStep)
-  const rowsSubsteps = useSelector(selectRowsSubsteps)
-  const columnsCurrentStep = useSelector(selectColumnsCurrentStep)
-  const columnsSubsteps = useSelector(selectColumnsSubsteps)
   const matrixColsLen = useSelector(selectMatrixColsLen)
   const matrixRowsLen = useSelector(selectMatrixRowsLen)
   const maxLen = matrixColsLen * matrixRowsLen;
   const currentStep = useSelector(selectCurrentStep)
 
-  const stepChange = useSelector(selectStepChange)
 
   const activeStep = useSelector(selectActiveStep)
   const plainText = useSelector(selectPlainText)
-  const rowKey = useSelector(selectRowKey)
-  const columnKey = useSelector(selectColumnKey)
 
   const [raw, setRaw] = useState('');
   const [formatted, setFormatted] = useState('');
@@ -110,36 +95,12 @@ export default function StepController() {
     return orderMap;
   }
 
-  function generateSubsteps(key) {
-    console.log(key)
-    const n = key.length;
-    console.log(keyToNumberArray(key))
-    // const target = key.split('').map(Number);
-    const target = keyToNumberArray(key)
-    console.log(target)
-    const steps = [];
 
-    const current = Array.from({ length: n }, (_, i) => i);
-    steps.push([...current]);
-
-    for (let i = 0; i < n; i++) {
-      if (current[i] !== target[i]) {
-        const swapIndex = current.indexOf(target[i]);
-        [current[i], current[swapIndex]] = [current[swapIndex], current[i]];
-        steps.push([...current]);
-      }
-    }
-
-    return steps;
-  }
 
   const [keyDisplay, setKeyDisplay] = useState(false);
 
   const [activeIndex, setActiveIndex] = useState(0);
-  const [lastMove, setLastMove] = useState(false);
-  // useEffect(() => {
-    // dispatch(setCurrentStep(activeIndex))
-  // },[activeIndex])
+
 
   const pairs = useMemo(() => {
     const result = [];
@@ -156,90 +117,61 @@ export default function StepController() {
     return result;
   }, [raw]);
 
+
   const [confirmError, setConfirmError] = useState('');
 
   const handleKeyConfirm = () =>{
-    // dispatch(setCurrentStep(-1))
 
     console.log('trenutni current step onconfirm:' + currentStep)
-    if(raw.length == 0){
+    if(raw.length === 0){
       setConfirmError('Enter at least one pair of digits.')
-      setShowRowsKeyError(true)
+      setShowKeyError(true)
       return;
     }
     if(raw.length % 2 === 1){
       setConfirmError('Every digit in key must be paired.')
-      setShowRowsKeyError(true)
+      setShowKeyError(true)
       return;
     }
-    if(showRowsKeyError === true){
-      setShowRowsKeyError(false);
+    if(showKeyError === true){
+      setShowKeyError(false);
     }
     setFormatted(formatAsPairs(raw));
     setKeyDisplay(true);
     dispatch(setKeyRaw(raw))
+
     setKeyButtonDisabled(true);
   }
 
-  const [showColsKeyError, setShowColsKeyError] = useState(false)
-  const [showRowsKeyError, setShowRowsKeyError] = useState(false)
+  const [showKeyError, setShowKeyError] = useState(false)
   const [showPlainTextError, setShowPlainTextError] = useState(false)
-
   const [keyButtonDisabled, setKeyButtonDisabled] = useState(false)
 
   const handlePrevious = () => {
-    if (activeStep > 0)
-      dispatch(setActiveStep(activeStep - 1))
-    console.log(activeStep)
-    if(activeStep === 2) {
-      dispatch(setColumnsCurrentStep(0))
-      dispatch(setColumnsAdvanceNext(true))
-    }
-    if(activeStep === 1){
-      dispatch(setRowsCurrentStep(0))
-      dispatch(setRowsAdvanceNext(true))
-    }
+    //TODO: Ovde je ceo step u levo kada sa vracamo sta da se radi potencijalno ce biti samo gray out dok se ne izvrsi middle
+    dispatch(setActiveStep(activeStep - 1));
+
+  
   };
 
+  // const hexText = useMemo(() => {
+  //   if(activeStep !== 0) return
+  //   return plainText.split('').map(c => c.charCodeAt(0).toString(16).padStart(2, '0')).join('');
+  // }, [plainText]);
 
-  const handleNext = () => { //TODO big fixes 07.01.2026
-    if(activeStep === 0 && plainText.length === 0){
-      setShowPlainTextError(true);
-      return
+  const handleNext = () => {
+    //TODO: Ovde je isto kao gore samo u desno
+    if(activeStep === 0){
+      const fullText = plainText.padEnd(49, 'X');
+      const hexText = fullText.split('').map(c => c.charCodeAt(0).toString(16).padStart(2, '0')).join('');
+      dispatch(setHexText(hexText))
+      dispatch(setPlainText(fullText))
+      
     }
-    // if(activeStep === 1 && rowKey.length !== matrixRowsLen){
-    //   setShowRowsKeyError(true)
-    //   return
-    // }
-    // if(activeStep === 2 && columnKey.length !== matrixColsLen){
-    //   setShowColsKeyError(true)
-    //   return
-    // }
+    
+    dispatch(setActiveStep(activeStep + 1));
 
-    if(activeStep === 1){
-      if(rowsCurrentStep !== rowsSubsteps.length-1) {
-        dispatch(setRowsCurrentStep(rowsSubsteps.length - 1))
-        dispatch(setRowsAdvanceNext(true))
-      }
-    }
-    if(activeStep === 2){
-      if(columnsCurrentStep !== columnsSubsteps.length-1){
-        dispatch(setColumnsCurrentStep(columnsSubsteps.length -1))
-        dispatch(setColumnsAdvanceNext(true))
-      }
-    }
-    if(showColsKeyError){
-      setShowColsKeyError(false)
-    }
-    if(showPlainTextError){
-      setShowPlainTextError(false);
-    }
-    if(showRowsKeyError){
-      setShowRowsKeyError(false)
-    }
-
-    if (activeStep < steps.length - 1)
-    dispatch(setActiveStep(activeStep + 1))
+    console.log(activeStep);
   };
 
 
@@ -248,14 +180,31 @@ export default function StepController() {
     console.log('formatted:', formatAsPairs(raw));
   }, [raw]);
 
+
+
+  function stringToHex(str) {
+    let hex = '';
+    for (let i = 0; i < str.length; i++) {
+      hex += str.charCodeAt(i).toString(16).padStart(2, '0');
+    }
+    console.log(hex);
+    return hex;
+  }
+
   return (
     <div className='px-6 pt-6 '>
     <div className="bg-gray-900/80 min-h-[170px] backdrop-blur-md p-6 rounded-xl shadow-lg border border-gray-700/50 transition-all duration-300">
       <div className="flex items-center justify-between mb-2">
-        <h3 className="text-2xl font-bold text-white bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text">
+        <h3 className="text-2xl font-bold text-white bg-linear-to-r from-blue-400 to-purple-500 bg-clip-text">
          {steps[activeStep].title}
         </h3>
         <div className="flex gap-3">
+          <button
+            onClick={()=>{stringToHex(plainText)}}
+            className={`px-4 py-2 rounded-lg font-medium transition-all duration-200 bg-blue-600 hover:bg-blue-700 text-white shadow-md`}
+          >
+            XOR
+          </button>
           <button
             onClick={handlePrevious}
             disabled={activeStep === 0}
@@ -291,9 +240,10 @@ export default function StepController() {
             type="text"
             maxLength={maxLen}
             value={plainText}
-            onChange={(e) =>
+            onChange={(e) =>{
               dispatch(setPlainText(e.target.value.toUpperCase().replace(/\s+/g, '')))
-            }
+              dispatch(setHexText(e.target.value.toUpperCase().replace(/\s+/g,'').split('').map(c => c.charCodeAt(0).toString(16).padStart(2, '0')).join('')))
+            }}
             className="w-full text-gray-300 bg-gray-700/50 rounded px-2 py-1 pr-14 text-sm"
           />
           <span className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-xs text-gray-400">
@@ -354,7 +304,7 @@ export default function StepController() {
           />
 
           }
-          {showRowsKeyError && (
+          {showKeyError && (
             <p className="mt-1 text-xs text-red-400">
               {confirmError}
             </p>
@@ -363,14 +313,14 @@ export default function StepController() {
 
 
         <button
-          className={`px-3 text-sm py-[4px] rounded text-white  ${keyButtonDisabled? 'bg-gray-800' : 'bg-blue-600 hover:bg-blue-500'} `}
+          className={`px-3 text-sm py-1 rounded text-white  ${keyButtonDisabled? 'bg-gray-800' : 'bg-blue-600 hover:bg-blue-500'} `}
           disabled={keyButtonDisabled}
           onClick={handleKeyConfirm}//TODO nema vise generate substeps sad se substepovi unose rucno
         >
           Confirm
         </button>
         <button
-          className={`px-2 py-[6px] rounded text-gray-200  ${currentStep <= -1 ? 'bg-gray-600' : 'bg-blue-600'} `}
+          className={`px-2 py-1.5 rounded text-gray-200  ${currentStep <= -1 ? 'bg-gray-600' : 'bg-blue-600'} `}
           disabled = {currentStep <= -1}
           onClick={() =>{
             dispatch(setHighlightStep(currentStep));
@@ -380,7 +330,7 @@ export default function StepController() {
           <BiSolidLeftArrow/>
         </button>
         <button
-          className={`px-2 py-[6px] rounded text-gray-200  ${currentStep >= pairs.length - 1 ? 'bg-gray-600' : 'bg-blue-600'} `}
+          className={`px-2 py-1.5 rounded text-gray-200  ${currentStep >= pairs.length - 1 ? 'bg-gray-600' : 'bg-blue-600'} `}
           disabled = {currentStep >= pairs.length - 1}
           onClick={() =>{
             dispatch(setHighlightStep(currentStep + 1));

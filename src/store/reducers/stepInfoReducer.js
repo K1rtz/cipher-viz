@@ -11,18 +11,7 @@ const initialState = {
     colsLen: 7,
   },
   plainText: '',
-  rowKey: '',
-  columnKey: '',
-  rowsInfo:{
-    substeps: [],
-    currentStep: 0,
-    advanceNext: false,
-  },
-  columnsInfo:{
-    substeps: [],
-    currentStep: 0,
-    advanceNext: false,
-  }
+  hexText: ''
 }
 
 const stepInfoSlice = createSlice({
@@ -53,39 +42,9 @@ const stepInfoSlice = createSlice({
     setPlainText: (state, action) => {{
       state.plainText = action.payload
     }},
-    setRowKey: (state, action) => {
-      state.rowKey = action.payload
-    },
-    setColumnKey: (state, action) => {
-      state.columnKey = action.payload
-    },
-    setNextSubstepSignal: (state, action) => {
-      state.nextSubstepSignal = action.payload
-    },
-    setRowsInfo: (state, action) => {
-      state.rowsInfo = action.payload
-    },
-    setRowsSubsteps: (state, action) => {
-      state.rowsInfo.substeps = action.payload
-    },
-    setRowsCurrentStep: (state, action) => {
-      state.rowsInfo.currentStep = action.payload
-    },
-    setColumnsCurrentStep: (state, action) => {
-      state.columnsInfo.currentStep = action.payload
-    },
-    setColumnsInfo: (state, action) => {
-      state.columnsInfo = action.payload
-    },
-    setColumnsSubsteps: (state, action) => {
-      state.columnsInfo.substeps = action.payload
-    },
-    setRowsAdvanceNext: (state, action) => {
-      state.rowsInfo.advanceNext = action.payload
-    },
-    setColumnsAdvanceNext: (state, action) => {
-      state.columnsInfo.advanceNext = action.payload
-    }
+    setHexText: (state, action)=> {{
+      state.hexText = action.payload
+    }}
 
   }
 })
@@ -93,21 +52,11 @@ const stepInfoSlice = createSlice({
 export const {
   setActiveStep,
   setPlainText,
-  setRowKey,
-  setColumnKey,
-  setColumnsCurrentStep,
-  setNextSubstepSignal,
-  setRowsSubsteps,
-  setRowsCurrentStep,
-  setRowsAdvanceNext,
-  setColumnsAdvanceNext,
-  setColumnsSubsteps,
-  setColsLen,
-  setRowsLen,
   setKeyRaw,
   setCurrentStep,
   setStepChange,
-  setHighlightStep
+  setHighlightStep,
+  setHexText
 } = stepInfoSlice.actions
 
 export default stepInfoSlice.reducer
