@@ -7,8 +7,9 @@ import {
   selectMatrixRowsLen,
   selectCurrentStep,
   selectHighlightStep,
+  selectShowHex
 } from './../store/selectors/stepInfoSelector.js'
-import { setActiveStep, setPlainText, setHighlightStep, setCurrentStep, setKeyRaw, setHexText} from './../store/reducers/stepInfoReducer'
+import { setActiveStep, setShowHex, setPlainText, setHighlightStep, setCurrentStep, setKeyRaw, setHexText} from './../store/reducers/stepInfoReducer'
 import { BiSolidRightArrow } from "react-icons/bi";
 import { BiSolidLeftArrow } from "react-icons/bi";
 
@@ -40,6 +41,54 @@ export default function StepController() {
     }
   ];
 
+
+  const handleFileUpload = (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  // opcionalno: dozvoli samo txt
+  if (!file.name.endsWith('.txt')) {
+    alert('Only .txt files are allowed');
+    return;
+  }
+
+  const reader = new FileReader();
+
+  reader.onload = (event) => {
+    let text = event.target.result;
+
+    // normalizacija teksta
+    text = text
+      .toUpperCase()
+      .replace(/\s+/g, ''); // sklanja razmake, nove redove itd.
+
+    if (text.length === 0) {
+      setShowPlainTextError(true);
+      return;
+    }
+
+    if (text.length > maxLen) {
+      text = text.slice(0, maxLen);
+    }
+
+    // pad sa X isto kao u handleNext
+    text = text.padEnd(maxLen, 'X');
+
+    dispatch(setPlainText(text));
+
+    const hex = text
+      .split('')
+      .map(c => c.charCodeAt(0).toString(16).padStart(2, '0'))
+      .join('');
+
+    dispatch(setHexText(hex));
+    setShowPlainTextError(false);
+  };
+
+  reader.readAsText(file);
+};
+
+
   const dispatch = useDispatch()
   const matrixColsLen = useSelector(selectMatrixColsLen)
   const matrixRowsLen = useSelector(selectMatrixRowsLen)
@@ -49,6 +98,7 @@ export default function StepController() {
 
   const activeStep = useSelector(selectActiveStep)
   const plainText = useSelector(selectPlainText)
+  const showHex = useSelector(selectShowHex)
 
   const [raw, setRaw] = useState('');
   const [formatted, setFormatted] = useState('');
@@ -179,6 +229,7 @@ export default function StepController() {
     console.log('raw:', raw);
     console.log('formatted:', formatAsPairs(raw));
   }, [raw]);
+  
 
 
 
@@ -246,6 +297,7 @@ export default function StepController() {
             }}
             className="w-full text-gray-300 bg-gray-700/50 rounded px-2 py-1 pr-14 text-sm"
           />
+
           <span className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-xs text-gray-400">
             {plainText.length}/{maxLen}
           </span>
@@ -311,7 +363,12 @@ export default function StepController() {
           )}
         </div>
 
-
+        <button
+          className={`px-3 text-sm py-1 rounded text-white  ${keyButtonDisabled? 'bg-gray-800' : 'bg-blue-600 hover:bg-blue-500'} `}
+          disabled={keyButtonDisabled}
+          onClick={()=>dispatch(setShowHex(!showHex))}
+          //TODO nema vise generate substeps sad se substepovi unose rucno
+        >Cuh</button>
         <button
           className={`px-3 text-sm py-1 rounded text-white  ${keyButtonDisabled? 'bg-gray-800' : 'bg-blue-600 hover:bg-blue-500'} `}
           disabled={keyButtonDisabled}

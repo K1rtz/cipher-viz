@@ -8,8 +8,9 @@ import {
   selectKeyRaw,
   selectCurrentStep,
   selectHighlightStep,
+  selectShowHex
 } from './../store/selectors/stepInfoSelector.js';
-import { setHexText } from './../store/reducers/stepInfoReducer'
+import { setHexText, setShowHex } from './../store/reducers/stepInfoReducer'
 
 
 export default function MatrixDisplay({ rows = 7, cols = 7 }) {
@@ -46,7 +47,8 @@ export default function MatrixDisplay({ rows = 7, cols = 7 }) {
 
   /* ---------- TEXT / HEX ---------- */
 
-  const [showHex, setShowHex] = useState(true);
+  // const [showHex, setShowHex] = useState(true);
+  const showHex = useSelector(selectShowHex)
 
   // const hexText = useMemo(() => {
   //   if(activeStep !== 0) return
@@ -177,11 +179,32 @@ function chainXOR(hexText, key) {
 
   return result.join("");
 }
+function chainXORInverse(hexText, key) {
+  // Pretvori hex string u niz bajtova (ovo su encoded bajtovi)
+  let bytes = [];
+  for (let i = 0; i < hexText.length; i += 2) {
+    bytes.push(parseInt(hexText.substr(i, 2), 16));
+  }
+
+  let result = [];
+  let prev = key; // isti početni ključ
+
+  for (let i = 0; i < bytes.length; i++) {
+    let decoded = bytes[i] ^ prev; // XOR sa prethodnim šifratom
+    result.push(decoded.toString(16).padStart(2, "0").toUpperCase());
+    prev = bytes[i]; // OVDE je razlika: prev je encoded bajt
+  }
+
+  return result.join("");
+}
+
 
 
   
   /* ---------- RENDER ---------- */
-
+function readMatrixRowMajor(matrixRows) {
+  return matrixRows.flatMap(row => row.tiles.map(t => t.value)).join('');
+}
   return (
     <div className="flex flex-col items-center py-6">
       <div className="w-full px-6">
@@ -192,20 +215,23 @@ function chainXOR(hexText, key) {
           >
             {/* Corner */}
             <div
-              className="flex items-center justify-center rounded-md border border-gray-700/50 cursor-pointer"
+              className="flex items-center justify-center rounded-md border bg-blue-950 border-gray-700/90 cursor-pointer"
               style={{ width: 64, height: 64 }}
               // onClick={() => setShowHex(v => !v)}
               onClick={() => {
-                setShowHex(v => !v)
+                dispatch(setHexText(chainXOR(hexText, 123)))
+                const x = readMatrixRowMajor(matrixRows)
+                console.log(x)
+              //   dispatch(setShowHex(!showHex))
                 
-                // let chained = chainXOR(hexText, 14)
-                // dispatch(setHexText(chained));
+              //   // let chained = chainXOR(hexText, 14)
+              //   // dispatch(setHexText(chained));
 
-                // console.log(plainText)
-              }
-              }
+              //   // console.log(plainText)
+              // }
+              }}
             >
-              HEX
+              XOR
             </div>
 
             {/* Column headers */}

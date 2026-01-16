@@ -7,3 +7,4 @@ export const selectKeyRaw = (state) => state.stepInfo.keyRaw
 export const selectStepChange = (state) => state.stepInfo.stepChange
 export const selectHighlightStep = (state) => state.stepInfo.highlightStep
 export const selectHexText = (state) => state.stepInfo.hexText
+export const selectShowHex = (state) => state.stepInfo.showHex

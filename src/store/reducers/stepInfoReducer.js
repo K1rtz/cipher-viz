@@ -11,13 +11,17 @@ const initialState = {
     colsLen: 7,
   },
   plainText: '',
-  hexText: ''
+  hexText: '',
+  showHex: false,
 }
 
 const stepInfoSlice = createSlice({
   name: 'stepInfo',
   initialState,
   reducers: {
+    setShowHex(state, action) {
+      state.showHex = action.payload
+    },
     setHighlightStep(state, action) {
       state.highlightStep = action.payload
     },
@@ -56,7 +60,8 @@ export const {
   setCurrentStep,
   setStepChange,
   setHighlightStep,
-  setHexText
+  setHexText,
+  setShowHex
 } = stepInfoSlice.actions
 
 export default stepInfoSlice.reducer

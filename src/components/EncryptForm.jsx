@@ -11,12 +11,15 @@ function EncryptForm() {
 
   const [config, setConfig] = useState({
     mode: "encrypt", // encrypt | decrypt
+    encodeMode: "Text",
     uppercase: false,
     removeSpaces: false,
 
-    rowKey: "",
-    columnKey: "",
-    transpositionOrder: "rows-first", // rows-first | cols-first
+
+    encryptionKey: "",
+    rawKey:"",
+    columnsLength: "",
+    rowsLength: "",
 
     paddingStrategy: "fixed", // fixed | random | repeat
     paddingChar: "X",
@@ -46,18 +49,93 @@ function EncryptForm() {
 
 
   const handleProcess = () => {
-    console.log('handleprocess')
-    let resultx;
-    if(config.mode === "encrypt") {
-      resultx = encryptDoubleTransposition(plainText, config);
-    }
-    else{
+    // console.log('handleprocess')
+    // let resultx;
+    // if(config.mode === "encrypt") {
+    //   resultx = encryptDoubleTransposition(plainText, config);
+    // }
+    // else{
 
-      resultx = decryptDoubleTransposition(plainText, config);
-    }
-    setResult(resultx);
-
+    //   resultx = decryptDoubleTransposition(plainText, config);
+    // }
+    // setResult(resultx);
+    console.log(encryptionKey)
   };
+
+
+const handleFileUpload = (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  if (!file.name.endsWith(".txt")) {
+    alert("Only .txt files are allowed");
+    return;
+  }
+
+  const reader = new FileReader();
+
+  reader.onload = (event) => {
+    let text = event.target.result;
+
+    // optional preprocessing (poštujemo config)
+    if (config.removeSpaces) {
+      text = text.replace(/\s+/g, "");
+    }
+
+    if (config.uppercase) {
+      text = text.toUpperCase();
+    }
+
+    setPlainText(text);
+    setResult(""); // resetuj rezultat jer je novi input
+  };
+
+  reader.readAsText(file);
+};
+const handleDownload = () => {
+  if (!result) return;
+
+  const blob = new Blob([result], { type: "text/plain;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+
+  const a = document.createElement("a");
+  a.href = url;
+
+  const suffix = config.mode === "encrypt" ? "encrypted" : "decrypted";
+  a.download = `double-transposition-${suffix}.txt`;
+
+  document.body.appendChild(a);
+  a.click();
+
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+};
+
+  const formatAsPairs = (digits) => {
+    if (!digits) return '';
+
+
+    const pairs = [];
+    for (let i = 0; i < digits.length; i += 2) {
+      const first = digits[i];
+      const second = digits[i + 1];
+
+      if (second !== undefined) {
+        pairs.push(`(${first}-${second})`);
+      } else {
+        pairs.push(`(${first}-`);
+      }
+    }
+
+    return pairs.join(',');
+  };
+const [encryptionKey, setEncryptionKey] = useState("");
+
+  useEffect(() => {
+    console.log('raw:', encryptionKey);
+    console.log('formatted:', formatAsPairs(encryptionKey));
+  }, [encryptionKey]);
+
 
   return (
     <div className="flex flex-col min-w-[800px]">
@@ -104,14 +182,27 @@ function EncryptForm() {
           {/* Inputs */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <div className="flex justify-between">
-                <label className="block text-sm text-gray-300 mb-1">
-                  {config.mode === "encrypt" ? "Plain text" : "Cipher text"}
-                </label>
-                <label className="block text-sm text-gray-300 mb-1">
+              <div className="flex justify-between items-center mb-1">
+              <label className="block text-sm text-gray-300">
+                {config.mode === "encrypt" ? "Plain text" : "Cipher text"}
+              </label>
+
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-gray-400">
                   len: {plainText.length.toLocaleString()}
+                </span>
+
+                <label className="text-xs px-2 py-1 rounded bg-purple-600 hover:bg-purple-500 text-white cursor-pointer">
+                  Upload .txt
+                  <input
+                    type="file"
+                    accept=".txt"
+                    onChange={handleFileUpload}
+                    className="hidden"
+                  />
                 </label>
               </div>
+            </div>
 
               <textarea
                 value={plainText}
@@ -122,11 +213,26 @@ function EncryptForm() {
             </div>
 
             <div>
-              <label className="block text-sm text-gray-300 mb-1">
-                {config.mode === "encrypt"
-                  ? "Encrypted text"
-                  : "Decrypted text"}
-              </label>
+              <div className="flex justify-between items-center mb-1">
+                <label className="block text-sm text-gray-300">
+                  {config.mode === "encrypt"
+                    ? "Encrypted text"
+                    : "Decrypted text"}
+                </label>
+
+                <button
+                  onClick={handleDownload}
+                  disabled={!result}
+                  className={`text-xs px-2 py-1 rounded transition-colors ${
+                    result
+                      ? "bg-green-600 hover:bg-green-500 text-white"
+                      : "bg-gray-700 text-gray-400 cursor-not-allowed"
+                  }`}
+                >
+                  Download .txt
+                </button>
+              </div>
+
               <textarea
                 value={result}
                 readOnly
@@ -145,36 +251,74 @@ function EncryptForm() {
         </div>
       </div>
 
-      {/* Encryption settings */}
+      {/* Encryption settings -----------------------------------------------------------------------------*/}
       <div className="mt-6 px-6 pt-4">
-        <h3 className="text-md border-t pt-2 font-semibold border-gray-700/50 text-gray-300 mb-3">
+
+        <h3 className="text-md border-t pt-2 font-semibold border-gray-700/50 text-gray-300 mb-1 ">
           Encryption settings
         </h3>
+        <div className="flex gap-2 mb-3">
+          {/* <h2 className="text-xs px-2 py-1 rounded text-white"> */}
+            {/* Version */}
+          {/* </h2> */}
+          <label className="text-xs px-2 py-1 rounded bg-purple-600 hover:bg-purple-500 text-white cursor-pointer">
+            Classic
+          </label>
+          <label className="text-xs px-2 py-1 rounded bg-purple-600 hover:bg-purple-500 text-white cursor-pointer">
+            Shifting XOR
+          </label>
+                    <label className="text-xs px-2 py-1 rounded bg-purple-600 hover:bg-purple-500 text-white cursor-pointer">
+            Chained XOR
+          </label>
 
+        </div>
+          
+        {/*ROWS AND COLUMNS LENGTH  */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label className="block text-xs text-gray-400 mb-1">
-              Rows permutation key
+              Rows length
             </label>
             <input
               type="text"
-              value={config.rowKey}
-              onChange={(e) => updateConfig("rowKey", e.target.value)}
+              value={config.rowsLength}
+              onChange={(e) => updateConfig("rowsLength", e.target.value)}
               className="w-full bg-gray-800/60 text-gray-200 px-2 py-1 rounded border border-gray-700"
             />
           </div>
-
           <div>
             <label className="block text-xs text-gray-400 mb-1">
-              Columns permutation key
+              Columns length
             </label>
             <input
               type="text"
-              value={config.columnKey}
-              onChange={(e) => updateConfig("columnKey", e.target.value)}
+              value={config.columnsLength}
+              onChange={(e) => updateConfig("columnsLength", e.target.value)}
               className="w-full bg-gray-800/60 text-gray-200 px-2 py-1 rounded border border-gray-700"
             />
           </div>
+        </div>
+
+
+        <div className="my-2 w-full">
+          <label className="block text-xs text-gray-400 mb-1">
+            Enciption key
+          </label>
+          <input
+            type="text"
+            disabled = {!config.columnsLength || !config.rowsLength}
+            value={formatAsPairs(encryptionKey)}
+            onChange={(e) =>{
+                const digitsOnly = e.target.value.replace(/[^0-6]/g, '');
+                setEncryptionKey(digitsOnly)
+            }}
+            className="w-full bg-gray-800/60 text-gray-200 px-2 py-1 rounded border border-gray-700"
+          />
+
+        </div>
+
+
+
 
           <div>
             <label className="block text-xs text-gray-400 mb-1">
@@ -213,8 +357,9 @@ function EncryptForm() {
                 }`}
               />
             </div>
+
           </div>
-        </div>
+
       </div>
 
       {/* Text preprocessing */}
