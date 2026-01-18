@@ -2,6 +2,8 @@ import React, {useEffect, useState} from "react";
 import {
   classicEncrypt,
   classicDecrypt,
+  xorEncrypt,
+  xorDecrypt,
   encryptDoubleTransposition,
   decryptDoubleTransposition,
   validateConfig} from "../crypto/doubleTransposition"
@@ -19,7 +21,7 @@ function EncryptForm() {
     uppercase: false,
     removeSpaces: false,
 
-
+    xorKey: "",
     encryptionKey: "",
     rawKey:"",
     columnsLength: "",
@@ -62,8 +64,39 @@ function EncryptForm() {
     let result
     if(keyTest.valid){
       
-      result = config.mode === 'encrypt' ? classicEncrypt(plainText, Number(config.rowsLength), Number(config.columnsLength), keyTest.numbers, config.paddingStrategy, config.paddingChar)
-      :  classicDecrypt(plainText, Number(config.rowsLength), Number(config.columnsLength), keyTest.numbers)
+      //CLASSIC VERSION
+      // result = config.mode === 'encrypt' ?
+      // classicEncrypt(plainText, Number(config.rowsLength), Number(config.columnsLength), keyTest.numbers, config.paddingStrategy, config.paddingChar) :
+      // classicDecrypt(plainText, Number(config.rowsLength), Number(config.columnsLength), keyTest.numbers)
+     
+      //XOR ENCRYPT
+      // result = xorEncrypt(plainText, Number(config.rowsLength), Number(config.columnsLength), keyTest.numbers, config.paddingStrategy, config.paddingChar, 231, 'chained')
+      //XOR DECRYPT
+      result = xorDecrypt(plainText, Number(config.rowsLength), Number(config.columnsLength), keyTest.numbers, 231, 'chained')
+      
+      switch(encryptionType){
+        case 'classic':
+          result = config.mode === 'encrypt' ?
+          classicEncrypt(plainText, Number(config.rowsLength), Number(config.columnsLength), keyTest.numbers, config.paddingStrategy, config.paddingChar) :
+          classicDecrypt(plainText, Number(config.rowsLength), Number(config.columnsLength), keyTest.numbers)
+          break;
+        case 'shifting':
+          result = config.mode === 'encrypt'?
+          xorEncrypt(plainText, Number(config.rowsLength), Number(config.columnsLength), keyTest.numbers, config.paddingStrategy, config.paddingChar, 231, 'shifting') :
+          xorDecrypt(plainText, Number(config.rowsLength), Number(config.columnsLength), keyTest.numbers, 231, 'shifting')
+          break;
+        case 'chained':
+          result = config.mode === 'encrypt'?
+          xorEncrypt(plainText, Number(config.rowsLength), Number(config.columnsLength), keyTest.numbers, config.paddingStrategy, config.paddingChar, 231, 'chained') :
+          xorDecrypt(plainText, Number(config.rowsLength), Number(config.columnsLength), keyTest.numbers, 231, 'chained')
+          break;
+      }
+
+
+
+      console.log(result)
+
+
       if(settingsError){
         setSettingsError('')
       }
@@ -72,32 +105,11 @@ function EncryptForm() {
       setSettingsError(keyTest.error)
     }
 
-    //DA LI JE ROW*COLUMN > DUZINE PLAINTEXTA
-    //DA LI ROW/COLUMN DUZINA ODGOVARA VREDNOSTIMA ROW I COL
 
 
-    // console.log('handleprocess')
-    // let resultx;
-    // if(config.mode === "encrypt") {
-    //   resultx = encryptDoubleTransposition(plainText, config);
-    // }
-    // else{
-
-    //   resultx = decryptDoubleTransposition(plainText, config);
-    // }
-    // setResult(resultx);
-    console.log('paddingStart:', config.paddingStrategy)
-    console.log('paddingChar:', config.paddingChar)
-    console.log('plainText', plainText)
-    console.log('rowsLength:', Number(config.rowsLength))
-    console.log('colsLength:', Number(config.columnsLength))
-    // let result = classicEncrypt(plainText, Number(config.rowsLength), Number(config.columnsLength), [0,1,1,2,4,3,2,4,6,0,1,2],
-    // config.paddingStrategy, config.paddingChar)
-    // let result = classicDecrypt('LE SE LROZBALEISA CUS NRAGA.I SE KO.ZRA.BO LE SIS', Number(config.rowsLength), Number(config.columnsLength), [0,1,1,2,4,3,2,4,6,0,1,2])
-    console.log(result)
 
     setResult(result)
-    console.log(encryptionKey)
+    // console.log(encryptionKey)
   };
 
 
@@ -193,9 +205,9 @@ const [encryptionKey, setEncryptionKey] = useState("");
     const matches = text.match(pairRegex);
 
 
-    if(Number(numRows) * Number(numCols) < plainText.length){
-      return {valid: false, error: `Matrix is too small to handle this amount of data`}
-    }
+    // if(Number(numRows) * Number(numCols) < plainText.length){
+      // return {valid: false, error: `Matrix is too small to handle this amount of data`}
+    // }
 
     console.log(matches.join("") !== text.replace(/\s+/g, ""))
     // ako nema poklapanja ili se ne poklapa ceo string → neispravan format
@@ -368,22 +380,42 @@ const [encryptionKey, setEncryptionKey] = useState("");
           </button>
 
           <button
-            onClick={() => setEncryptionType("shifting-xor")}
-            className={encryptionButtonClass("shifting-xor")}
+            onClick={() => setEncryptionType("shifting")}
+            className={encryptionButtonClass("shifting")}
           >
             Shifting XOR
           </button>
 
           <button
-            onClick={() => setEncryptionType("chained-xor")}
-            className={encryptionButtonClass("chained-xor")}
+            onClick={() => setEncryptionType("chained")}
+            className={encryptionButtonClass("chained")}
           >
             Chained XOR
           </button>
         </div>
           
         {/*ROWS AND COLUMNS LENGTH  */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+        <div className={`grid grid-cols-1 ${encryptionType === 'classic' ? ' md:grid-cols-2 ' : ' md:grid-cols-3 '} gap-4`}>
+
+          <div className={`${encryptionType === 'classic' ? ' hidden' : ' block '}`}>
+            <label className="block text-xs text-gray-400 mb-1">
+              XOR key
+            </label>
+            <input
+              type="number"
+              min={0}
+              max={255}
+              value={config.xorKey}
+              onChange={(e) => {
+                let val = Number(e.target.value);
+                if (val < 0) val = 0;
+                if (val > 255) val = 255;
+                updateConfig("xorKey", val);
+              }}
+              className="w-full bg-gray-800/60 text-gray-200 px-2 py-1 rounded border border-gray-700 "
+            />
+          </div>
           <div>
             <label className="block text-xs text-gray-400 mb-1">
               Rows length
@@ -406,7 +438,9 @@ const [encryptionKey, setEncryptionKey] = useState("");
               className="w-full bg-gray-800/60 text-gray-200 px-2 py-1 rounded border border-gray-700"
             />
           </div>
+          
         </div>
+        
 
 
         <div className="my-2 w-full">
