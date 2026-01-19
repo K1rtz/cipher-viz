@@ -7,8 +7,9 @@ const initialState = {
   highlightStep: -1,
   stepChange: false,
   matrixInfo:{
-    rowsLen: 7,
-    colsLen: 7,
+    rowsLen: 6,
+    colsLen: 9,
+    fakeColsLen: 9
   },
   plainText: '',
   hexText: '',
@@ -35,10 +36,13 @@ const stepInfoSlice = createSlice({
       state.keyRaw = action.payload
     },
     setRowsLen: (state, action) => {
-      state.matrixInfo.rowsLen = action.payload.rowsLen;
+      state.matrixInfo.rowsLen = action.payload;
     },
     setColsLen: (state, action) => {
-      state.matrixInfo.colsLen = action.payload.colsLen;
+      state.matrixInfo.colsLen = action.payload;
+    },
+    setFakeColsLen: (state, action) =>{
+      state.matrixInfo.fakeColsLen = action.payload;
     },
     setActiveStep: (state, action) => {
       state.activeStep = action.payload
@@ -61,7 +65,10 @@ export const {
   setStepChange,
   setHighlightStep,
   setHexText,
-  setShowHex
+  setShowHex,
+  setRowsLen,
+  setColsLen,
+  setFakeColsLen
 } = stepInfoSlice.actions
 
 export default stepInfoSlice.reducer

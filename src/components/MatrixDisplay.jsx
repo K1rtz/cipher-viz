@@ -8,12 +8,23 @@ import {
   selectKeyRaw,
   selectCurrentStep,
   selectHighlightStep,
-  selectShowHex
+  selectShowHex,
+  selectMatrixRowsLen,
+  selectMatrixColsLen,
+  selectFakeColsLen
 } from './../store/selectors/stepInfoSelector.js';
-import { setHexText, setShowHex } from './../store/reducers/stepInfoReducer'
+import { setHexText, setShowHex, setRowsLen, setColsLen, setFakeColsLen } from './../store/reducers/stepInfoReducer'
 
 
-export default function MatrixDisplay({ rows = 7, cols = 7 }) {
+export default function MatrixDisplay() {
+
+  const rows = useSelector(selectMatrixRowsLen)
+  // const [rows, setRows] = useState(5);
+  const cols = useSelector(selectMatrixColsLen)
+  // const [cols, setCols] = useState(9);
+
+  const fakeColsLen = useSelector(selectFakeColsLen)
+
   const activeStep = useSelector(selectActiveStep);
   const plainText = useSelector(selectPlainText);
   const currentStep = useSelector(selectCurrentStep);
@@ -205,8 +216,135 @@ function chainXORInverse(hexText, key) {
 function readMatrixRowMajor(matrixRows) {
   return matrixRows.flatMap(row => row.tiles.map(t => t.value)).join('');
 }
+
+const [colsSwap, setColsSwap] = useState(false);
+
+
+useEffect(() => {
+  const content = readMatrixRowMajor(matrixRows);
+  
+
+  setRowHeaders(
+    Array.from({ length: rows }, (_, i) => ({ id: i, label: i }))
+  );
+
+  setColumnHeaders(
+    Array.from({ length: cols }, (_, i) => ({ id: i, label: i }))
+  );
+
+  setMatrixRows(
+    Array.from({ length: rows }, (_, r) => ({
+      rowId: r,
+      tiles: Array.from({ length: cols }, (_, c) => ({
+        id: r * cols + c,
+        colId: c,
+        value: content[r * cols + c] ?? ' ',
+      })),
+    }))
+  );
+}, [rows, cols]);
+
+const [disableLayout, setDisableLayout] = useState(false);
+
+const changeCols = delta => {
+  console.log(delta)
+  setDisableLayout(true);
+
+  setColumnHeaders(prev => {
+    const nextCols = Math.max(1, prev.length + delta);
+    return Array.from({ length: nextCols }, (_, i) => ({
+      id: i,
+      label: i,
+    }));
+  });
+
+  setMatrixRows(prev =>
+    prev.map(row => {
+      const nextLen = Math.max(1, row.tiles.length + delta);
+
+      const nextTiles =
+        delta > 0
+          ? [
+              ...row.tiles,
+              ...Array.from({ length: delta }, (_, i) => ({
+                id: row.rowId * 1000 + row.tiles.length + i,
+                colId: row.tiles.length + i,
+                value: ' ',
+              })),
+            ]
+          : row.tiles.slice(0, nextLen);
+
+      return { ...row, tiles: nextTiles };
+    })
+  );
+
+  dispatch(setColsLen(fakeColsLen))
+  // setColsSwap(!colsSwap)
+
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => setDisableLayout(false));
+  }); 
+};
+
+useEffect(()=>{
+  if(fakeColsLen === cols) return;
+
+  const id = setTimeout(()=>{
+    const delta = fakeColsLen < cols ? -1 : 1;
+    changeCols(delta);
+  }, 10); // 25 fps
+
+  return () => clearTimeout(id);
+},[fakeColsLen])
+
+
   return (
     <div className="flex flex-col items-center py-6">
+      <div className='h-14 hidden '>
+        
+      <div className={`flex gap-3 mb-4 justify-center ${activeStep === 0 ? 'visible' : 'hidden'} `}>
+  <button
+    onClick={() => 
+      dispatch(setRowsLen(rows-1))
+      // setRows(r => Math.max(1, r - 1))
+
+    }
+    className="px-3 py-1 bg-gray-700 rounded"
+  >
+    - Row
+  </button>
+
+  <button
+    onClick={() =>{
+      dispatch(setRowsLen(rows+1))}
+      // if(rows<10) setRows(r => r + 1)}
+    }
+    className="px-3 py-1 bg-gray-700 rounded"
+  >
+    + Row
+  </button>
+
+  <button
+    onClick={() => {
+      changeCols(-1)}
+    }
+    className="px-3 py-1 bg-gray-700 rounded"
+  >
+    - Col
+  </button>
+
+  <button
+    onClick={() =>
+      {
+        if (cols < 10) changeCols(1)}
+          // dispatch(setFakeColsLen(cols + 1))}
+      } 
+    className="px-3 py-1 bg-gray-700 rounded"
+  >
+    + Col
+  </button>
+</div>
+</div>
       <div className="w-full px-6">
         <div className="bg-gray-900/80 backdrop-blur-md border border-gray-700/50 rounded-2xl py-6 shadow-xl">
           <div
@@ -215,7 +353,7 @@ function readMatrixRowMajor(matrixRows) {
           >
             {/* Corner */}
             <div
-              className="flex items-center justify-center rounded-md border bg-blue-950 border-gray-700/90 cursor-pointer"
+              className="flex items-center justify-center  rounded-md border bg-blue-950 border-gray-700/90 cursor-pointer"
               style={{ width: 64, height: 64 }}
               // onClick={() => setShowHex(v => !v)}
               onClick={() => {
@@ -231,7 +369,7 @@ function readMatrixRowMajor(matrixRows) {
               // }
               }}
             >
-              XOR
+              
             </div>
 
             {/* Column headers */}

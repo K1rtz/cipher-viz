@@ -7,9 +7,10 @@ import {
   selectMatrixRowsLen,
   selectCurrentStep,
   selectHighlightStep,
-  selectShowHex
+  selectShowHex,
+  selectFakeColsLen,
 } from './../store/selectors/stepInfoSelector.js'
-import { setActiveStep, setShowHex, setPlainText, setHighlightStep, setCurrentStep, setKeyRaw, setHexText} from './../store/reducers/stepInfoReducer'
+import { setActiveStep, setShowHex, setPlainText, setHighlightStep, setCurrentStep, setKeyRaw, setHexText, setColsLen, setRowsLen, setFakeColsLen} from './../store/reducers/stepInfoReducer'
 import { BiSolidRightArrow } from "react-icons/bi";
 import { BiSolidLeftArrow } from "react-icons/bi";
 
@@ -17,10 +18,8 @@ export default function StepController() {
   const steps = [
     {
       id: 1,
-      title: 'Plain Text',
-      description:
-        'Enter the original message that will be encrypted using the Double Transposition cipher. ' +
-        'This text will be placed sequentially into the matrix row by row and serves as the starting point of the encryption process.',
+      title: 'Encryption setup',
+      description: 'Enter the original message to be encrypted, select the encryption algorithm (e.g., Chained XOR, Shifting XOR, Classic Double Transposition), and configure the matrix dimensions. ' + 'This step serves as the initial configuration for the encryption process, combining message input with algorithm choice and matrix setup.',
       keyText: 'Message:'
     },
     {
@@ -42,52 +41,6 @@ export default function StepController() {
   ];
 
 
-  const handleFileUpload = (e) => {
-  const file = e.target.files[0];
-  if (!file) return;
-
-  // opcionalno: dozvoli samo txt
-  if (!file.name.endsWith('.txt')) {
-    alert('Only .txt files are allowed');
-    return;
-  }
-
-  const reader = new FileReader();
-
-  reader.onload = (event) => {
-    let text = event.target.result;
-
-    // normalizacija teksta
-    text = text
-      .toUpperCase()
-      .replace(/\s+/g, ''); // sklanja razmake, nove redove itd.
-
-    if (text.length === 0) {
-      setShowPlainTextError(true);
-      return;
-    }
-
-    if (text.length > maxLen) {
-      text = text.slice(0, maxLen);
-    }
-
-    // pad sa X isto kao u handleNext
-    text = text.padEnd(maxLen, 'X');
-
-    dispatch(setPlainText(text));
-
-    const hex = text
-      .split('')
-      .map(c => c.charCodeAt(0).toString(16).padStart(2, '0'))
-      .join('');
-
-    dispatch(setHexText(hex));
-    setShowPlainTextError(false);
-  };
-
-  reader.readAsText(file);
-};
-
 
   const dispatch = useDispatch()
   const matrixColsLen = useSelector(selectMatrixColsLen)
@@ -95,6 +48,7 @@ export default function StepController() {
   const maxLen = matrixColsLen * matrixRowsLen;
   const currentStep = useSelector(selectCurrentStep)
 
+  const fakeColsLen = useSelector(selectFakeColsLen)
 
   const activeStep = useSelector(selectActiveStep)
   const plainText = useSelector(selectPlainText)
@@ -212,7 +166,7 @@ export default function StepController() {
   const handleNext = () => {
     //TODO: Ovde je isto kao gore samo u desno
     if(activeStep === 0){
-      const fullText = plainText.padEnd(49, 'X');
+      const fullText = plainText.padEnd(matrixRowsLen*matrixColsLen, 'X');
       const hexText = fullText.split('').map(c => c.charCodeAt(0).toString(16).padStart(2, '0')).join('');
       dispatch(setHexText(hexText))
       dispatch(setPlainText(fullText))
@@ -229,7 +183,7 @@ export default function StepController() {
     console.log('raw:', raw);
     console.log('formatted:', formatAsPairs(raw));
   }, [raw]);
-  
+
 
 
 
@@ -242,20 +196,22 @@ export default function StepController() {
     return hex;
   }
 
+  const [xorMode, setXorMode] = useState('')
+
   return (
-    <div className='px-6 pt-6 '>
+    <div className='px-6 pt-6 min-h-[250px]'>
     <div className="bg-gray-900/80 min-h-[170px] backdrop-blur-md p-6 rounded-xl shadow-lg border border-gray-700/50 transition-all duration-300">
       <div className="flex items-center justify-between mb-2">
         <h3 className="text-2xl font-bold text-white bg-linear-to-r from-blue-400 to-purple-500 bg-clip-text">
          {steps[activeStep].title}
         </h3>
         <div className="flex gap-3">
-          <button
+          {/* <button
             onClick={()=>{stringToHex(plainText)}}
             className={`px-4 py-2 rounded-lg font-medium transition-all duration-200 bg-blue-600 hover:bg-blue-700 text-white shadow-md`}
           >
             XOR
-          </button>
+          </button> */}
           <button
             onClick={handlePrevious}
             disabled={activeStep === 0}
@@ -281,38 +237,98 @@ export default function StepController() {
         </div>
       </div>
       <p className="text-gray-300 text-sm leading-relaxed">{steps[activeStep].description}</p>
-      <div className={`flex items-start gap-2 mt-4 ${activeStep === 0 ? 'flex' : 'hidden'}`}>
+{activeStep === 0 && (
+  <div className="mt-4 flex items-center gap-3">
 
-        <div className="relative flex-1">
-          <div className='flex-1'>
-            <div className="relative flex-1">
+    {/* MESSAGE */}
+    <div className="relative flex-1 min-w-[220px]">
+      <input
+        type="text"
+        maxLength={maxLen}
+        value={plainText}
+        onChange={(e) => {
+          const val = e.target.value.toUpperCase().replace(/\s+/g, '');
+          dispatch(setPlainText(val));
+          dispatch(
+            setHexText(
+              val
+                .split('')
+                .map(c =>
+                  c.charCodeAt(0).toString(16).padStart(2, '0')
+                )
+                .join('')
+            )
+          );
+        }}
+        className="w-full text-gray-200 bg-gray-700/60 rounded px-3 py-2 pr-12 text-sm
+                   focus:outline-none focus:ring-2 focus:ring-blue-500"
+        placeholder="Message"
+      />
 
-            <input
-            type="text"
-            maxLength={maxLen}
-            value={plainText}
-            onChange={(e) =>{
-              dispatch(setPlainText(e.target.value.toUpperCase().replace(/\s+/g, '')))
-              dispatch(setHexText(e.target.value.toUpperCase().replace(/\s+/g,'').split('').map(c => c.charCodeAt(0).toString(16).padStart(2, '0')).join('')))
-            }}
-            className="w-full text-gray-300 bg-gray-700/50 rounded px-2 py-1 pr-14 text-sm"
-          />
+      <span className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-gray-400">
+        {plainText.length}/{maxLen}
+      </span>
+    </div>
 
-          <span className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-xs text-gray-400">
-            {plainText.length}/{maxLen}
-          </span>
-            </div>
-            {showPlainTextError && (
-              <p className="mt-1 text-xs text-red-400">
-                Message field is empty!
-              </p>
-            )}
+    {/* ALGORITHM PICKER */}
+    <select
+      value={xorMode}
+      onChange={(e) => dispatch(setXorMode(e.target.value))}
+      className="bg-gray-700 text-gray-200 text-sm rounded px-3 py-2
+                 focus:outline-none focus:ring-2 focus:ring-blue-500"
+    >
+      <option value="classic">Classic</option>
+      <option value="chained">Chained XOR</option>
+      <option value="shifting">Shifting XOR</option>
+    </select>
 
-          </div>
+    {/* ROWS */}
+    <div className="flex items-center gap-1">
+      <span className="text-xs text-gray-400">R</span>
+      <button
+        onClick={() => dispatch(setRowsLen(Math.max(1, matrixRowsLen - 1)))}
+        className="px-2 py-1 bg-gray-700 rounded hover:bg-gray-600 text-sm"
+      >
+        −
+      </button>
+      <span className="w-5 text-center text-gray-200 text-sm">
+        {matrixRowsLen}
+      </span>
+      <button
+        onClick={() =>{
+          console.log(matrixRowsLen + 1)
+          dispatch(setRowsLen(Math.min(10, matrixRowsLen + 1)))}
+        } 
+        className="px-2 py-1 bg-gray-700 rounded hover:bg-gray-600 text-sm"
+      >
+        +
+      </button>
+    </div>
 
-        </div>
+    {/* COLS */}
+    <div className="flex items-center gap-1">
+      <span className="text-xs text-gray-400">C</span>
+      <button
+        onClick={() => dispatch(setFakeColsLen(Math.max(1, fakeColsLen - 1)))}
+        className="px-2 py-1 bg-gray-700 rounded hover:bg-gray-600 text-sm"
+      >
+        −
+      </button>
+      <span className="w-5 text-center text-gray-200 text-sm">
+        {matrixColsLen}
+      </span>
+      <button
+        onClick={() => dispatch(setFakeColsLen(Math.min(10,fakeColsLen + 1)))}
+        className="px-2 py-1 bg-gray-700 rounded hover:bg-gray-600 text-sm"
+      >
+        +
+      </button>
+    </div>
 
-      </div>
+  </div>
+)}
+
+
 
       {/*//GLAVNI STEP*/}
       <div
@@ -343,7 +359,7 @@ export default function StepController() {
             value={formatAsPairs(raw)}
             onChange={(e) => {
 
-              const digitsOnly = e.target.value.replace(/[^0-6]/g, '');
+              const digitsOnly = e.target.value.replace(/[^0-9]/g, '');
               setRaw(digitsOnly);
             }}
             onKeyDown={(e) => {
