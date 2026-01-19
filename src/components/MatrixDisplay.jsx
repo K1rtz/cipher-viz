@@ -300,76 +300,26 @@ useEffect(()=>{
 
   return (
     <div className="flex flex-col items-center py-6">
-      <div className='h-14 hidden '>
-        
-      <div className={`flex gap-3 mb-4 justify-center ${activeStep === 0 ? 'visible' : 'hidden'} `}>
-  <button
-    onClick={() => 
-      dispatch(setRowsLen(rows-1))
-      // setRows(r => Math.max(1, r - 1))
 
-    }
-    className="px-3 py-1 bg-gray-700 rounded"
-  >
-    - Row
-  </button>
-
-  <button
-    onClick={() =>{
-      dispatch(setRowsLen(rows+1))}
-      // if(rows<10) setRows(r => r + 1)}
-    }
-    className="px-3 py-1 bg-gray-700 rounded"
-  >
-    + Row
-  </button>
-
-  <button
-    onClick={() => {
-      changeCols(-1)}
-    }
-    className="px-3 py-1 bg-gray-700 rounded"
-  >
-    - Col
-  </button>
-
-  <button
-    onClick={() =>
-      {
-        if (cols < 10) changeCols(1)}
-          // dispatch(setFakeColsLen(cols + 1))}
-      } 
-    className="px-3 py-1 bg-gray-700 rounded"
-  >
-    + Col
-  </button>
-</div>
-</div>
       <div className="w-full px-6">
         <div className="bg-gray-900/80 backdrop-blur-md border border-gray-700/50 rounded-2xl py-6 shadow-xl">
           <div
-            className="grid gap-2 justify-center"
+            className="grid gap-2 justify-center "
             style={{ gridTemplateColumns: `64px repeat(${cols}, 64px)` }}
           >
             {/* Corner */}
             <div
-              className="flex items-center justify-center  rounded-md border bg-blue-950 border-gray-700/90 cursor-pointer"
+              className="flex items-center justify-center text-blue-500 text-bold rounded-md border border-gray-700/90 "
               style={{ width: 64, height: 64 }}
               // onClick={() => setShowHex(v => !v)}
               onClick={() => {
                 dispatch(setHexText(chainXOR(hexText, 123)))
                 const x = readMatrixRowMajor(matrixRows)
                 console.log(x)
-              //   dispatch(setShowHex(!showHex))
-                
-              //   // let chained = chainXOR(hexText, 14)
-              //   // dispatch(setHexText(chained));
 
-              //   // console.log(plainText)
-              // }
               }}
             >
-              
+              C
             </div>
 
             {/* Column headers */}
@@ -382,14 +332,14 @@ useEffect(()=>{
               return (
                 <motion.div
                   key={header.id}
-                  layout
+                  layout 
                   animate={{
                     backgroundColor: isHighlighted
                       ? 'rgba(59,130,246,0.35)'
                       : 'rgba(31,41,55,0.3)',
                     color: '#fff',
                   }}
-                  transition={{ layout: { type: 'spring', stiffness: 80, damping: 20 } }}
+                  transition={{ layout: activeStep === 0 && disableLayout ? { duration: 0 } :  { type: 'spring', stiffness: 80, damping: 20 } }}
                   className="flex items-center justify-center rounded-md border border-gray-700/50"
                   style={{ width: 64, height: 64 }}
                 >
@@ -416,7 +366,7 @@ useEffect(()=>{
                         : 'rgba(31,41,55,0.3)',
                       color: '#fff',
                     }}
-                    transition={{ layout: { type: 'spring', stiffness: 80, damping: 20 } }}
+                    transition={{ layout:  activeStep === 0 && disableLayout ? { duration: 0 } :  { type: 'spring', stiffness: 80, damping: 20 } }}
                     className="flex items-center justify-center rounded-md border border-gray-700/50"
                     style={{ width: 64, height: 64 }}
                   >
@@ -427,8 +377,8 @@ useEffect(()=>{
                   {row.tiles.map(tile => (
                     <motion.div
                       key={tile.id}
-                      layout
-                      transition={{ type: 'spring', stiffness: 80, damping: 20 }}
+                      layout 
+                      transition={ { layout:  activeStep === 0 && disableLayout ? { duration: 0 } : {type: 'spring', stiffness: 80, damping: 20 }}}
                       className={`flex items-center justify-center rounded-lg font-mono text-xl font-bold border ${
                         tile.value === ' '
                           ? 'bg-gray-800/50 text-gray-600 border-gray-700/50'

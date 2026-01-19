@@ -273,20 +273,29 @@ export default function StepController() {
     {/* ALGORITHM PICKER */}
     <select
       value={xorMode}
-      onChange={(e) => dispatch(setXorMode(e.target.value))}
+      onChange={(e) =>{
+
+        console.log(e.target.value)
+        if(e.target.value === 'chained'){
+          dispatch(setShowHex(!showHex))
+        }
+        dispatch(setXorMode(e.target.value))
+        
+      }
+      }
       className="bg-gray-700 text-gray-200 text-sm rounded px-3 py-2
                  focus:outline-none focus:ring-2 focus:ring-blue-500"
     >
       <option value="classic">Classic</option>
       <option value="chained">Chained XOR</option>
-      <option value="shifting">Shifting XOR</option>
+      {/* <option value="shifting">Shifting XOR</option> */}
     </select>
 
     {/* ROWS */}
     <div className="flex items-center gap-1">
       <span className="text-xs text-gray-400">R</span>
       <button
-        onClick={() => dispatch(setRowsLen(Math.max(1, matrixRowsLen - 1)))}
+        onClick={() => dispatch(setRowsLen(Math.max(2, matrixRowsLen - 1)))}
         className="px-2 py-1 bg-gray-700 rounded hover:bg-gray-600 text-sm"
       >
         −
@@ -309,7 +318,7 @@ export default function StepController() {
     <div className="flex items-center gap-1">
       <span className="text-xs text-gray-400">C</span>
       <button
-        onClick={() => dispatch(setFakeColsLen(Math.max(1, fakeColsLen - 1)))}
+        onClick={() => dispatch(setFakeColsLen(Math.max(2, fakeColsLen - 1)))}
         className="px-2 py-1 bg-gray-700 rounded hover:bg-gray-600 text-sm"
       >
         −
