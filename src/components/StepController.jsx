@@ -7,10 +7,11 @@ import {
   selectMatrixRowsLen,
   selectCurrentStep,
   selectHighlightStep,
-  selectShowHex,
   selectFakeColsLen,
+  selectCipherType,
+  selectVisualStep,
 } from './../store/selectors/stepInfoSelector.js'
-import { setActiveStep, setShowHex, setPlainText, setHighlightStep, setCurrentStep, setKeyRaw, setHexText, setColsLen, setRowsLen, setFakeColsLen} from './../store/reducers/stepInfoReducer'
+import { setVisualStep, setActiveStep, setPlainText, setHighlightStep, setCurrentStep, setKeyRaw, setHexText, setColsLen, setRowsLen, setFakeColsLen, setCipherType} from './../store/reducers/stepInfoReducer'
 import { BiSolidRightArrow } from "react-icons/bi";
 import { BiSolidLeftArrow } from "react-icons/bi";
 
@@ -52,13 +53,11 @@ export default function StepController() {
 
   const activeStep = useSelector(selectActiveStep)
   const plainText = useSelector(selectPlainText)
-  const showHex = useSelector(selectShowHex)
 
   const [raw, setRaw] = useState('');
   const [formatted, setFormatted] = useState('');
 
   const highlightStep = useSelector(selectHighlightStep)
-
 
 
   const formatAsPairs = (digits) => {
@@ -158,10 +157,7 @@ export default function StepController() {
   
   };
 
-  // const hexText = useMemo(() => {
-  //   if(activeStep !== 0) return
-  //   return plainText.split('').map(c => c.charCodeAt(0).toString(16).padStart(2, '0')).join('');
-  // }, [plainText]);
+
 
   const handleNext = () => {
     //TODO: Ovde je isto kao gore samo u desno
@@ -197,6 +193,63 @@ export default function StepController() {
   }
 
   const [xorMode, setXorMode] = useState('')
+
+
+const cipherType = useSelector(selectCipherType)
+const visualSteps = useMemo(() => {
+  const steps = [];
+
+
+  for (let i = 0; i < pairs.length; i++) {
+    if (cipherType === 'chained') {
+      steps.push({ type: 'xor', engineStep: i });
+    }
+    steps.push({ type: 'swap', engineStep: i });
+
+  }
+  console.log('visualsteps:' , steps)
+  return steps;
+
+}, [pairs, cipherType]);
+
+const visualStep = useSelector(selectVisualStep)
+const [lastVisualStep, setLastVisualStep] = useState(visualStep);
+useEffect(()=>{
+  if(visualStep === -1) return
+  console.log(visualStep)
+  console.log(visualSteps[visualStep].type)
+  let x = false;
+  if(lastVisualStep < visualStep){
+    x = true
+  }else{
+    x = false
+  }
+  if(visualSteps[visualStep].type === 'swap'){
+    if(x) 
+    {      
+      dispatch(setHighlightStep(visualStep + 1))
+      dispatch(setCurrentStep(currentStep + 1))
+      console.log(visualStep)
+      console.log(highlightStep)
+    } 
+    else{
+      dispatch(setHighlightStep(visualStep))
+      dispatch(setCurrentStep(currentStep-1))
+    }    
+
+
+  }else{
+
+    if(x){
+      dispatch(setHighlightStep(visualStep + 1))
+    }else{
+      dispatch(setHighlightStep(visualStep))
+    }
+  }
+  setLastVisualStep(visualStep)
+},[visualStep])
+
+
 
   return (
     <div className='px-6 pt-6 min-h-[250px]'>
@@ -277,8 +330,13 @@ export default function StepController() {
 
         console.log(e.target.value)
         if(e.target.value === 'chained'){
-          dispatch(setShowHex(!showHex))
+          dispatch(setCipherType('chained'))
+
+        }else if(e.target.value === 'classic'){
+          dispatch(setCipherType('classic'))
+
         }
+
         dispatch(setXorMode(e.target.value))
         
       }
@@ -353,13 +411,28 @@ export default function StepController() {
 
               <div className="w-full text-gray-300 bg-gray-700/50 rounded px-2 py-1 text-sm flex flex-wrap gap-1">
 
-                {pairs.map((pair, i) => (
+                {/* {visualSteps.map((step, i) =>{
+                  return(
                   <span
                     key={i}
-                    className={`inline-flex items-center justify-center rounded px-1 leading-none p-1
+                    className={`inline-flex items-center justify-center rounded px-1 leading-none py-1 pb-1.5
                     ${i === highlightStep ? 'text-blue-400 bg-blue-500/10 border border-blue-400 font-bold' : 'text-gray-300'}`}                                  >
-                  {pair}
+                    {step.type}
                 </span>
+                  )})
+                } */}
+                {pairs.map((pair, i) => (
+                  <div>
+                  <span>
+                    xor
+                  </span>
+                  <span
+                    key={i}
+                    className={`inline-flex items-center justify-center rounded px-1 leading-none py-1 pb-1.5
+                    ${i === highlightStep ? 'text-blue-400 bg-blue-500/10 border border-blue-400 font-bold' : 'text-gray-300'}`}                                  >
+                    {pair}
+                </span>
+                </div>
                 ))}
               </div>
             :
@@ -387,13 +460,6 @@ export default function StepController() {
             </p>
           )}
         </div>
-
-        <button
-          className={`px-3 text-sm py-1 rounded text-white  ${keyButtonDisabled? 'bg-gray-800' : 'bg-blue-600 hover:bg-blue-500'} `}
-          disabled={keyButtonDisabled}
-          onClick={()=>dispatch(setShowHex(!showHex))}
-          //TODO nema vise generate substeps sad se substepovi unose rucno
-        >Cuh</button>
         <button
           className={`px-3 text-sm py-1 rounded text-white  ${keyButtonDisabled? 'bg-gray-800' : 'bg-blue-600 hover:bg-blue-500'} `}
           disabled={keyButtonDisabled}
@@ -403,23 +469,26 @@ export default function StepController() {
         </button>
         <button
           className={`px-2 py-1.5 rounded text-gray-200  ${currentStep <= -1 ? 'bg-gray-600' : 'bg-blue-600'} `}
+          // disabled = {visualStep <= -1}
           disabled = {currentStep <= -1}
           onClick={() =>{
             dispatch(setHighlightStep(currentStep));
-            console.log(currentStep-1)
             dispatch(setCurrentStep(currentStep - 1))
+            // dispatch(setVisualStep(visualStep - 1))
+            
+
           }}>
           <BiSolidLeftArrow/>
         </button>
         <button
           className={`px-2 py-1.5 rounded text-gray-200  ${currentStep >= pairs.length - 1 ? 'bg-gray-600' : 'bg-blue-600'} `}
+          // disabled = {visualStep >= visualSteps.length - 1}
           disabled = {currentStep >= pairs.length - 1}
           onClick={() =>{
             dispatch(setHighlightStep(currentStep + 1));
-            console.log(highlightStep)
-            console.log(currentStep+1)
             dispatch(setCurrentStep(currentStep + 1))
-            console.log('right' + activeIndex)
+            // dispatch(setVisualStep(visualStep + 1))
+
           }}>
           <BiSolidRightArrow />
         </button>

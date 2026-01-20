@@ -8,12 +8,12 @@ import {
   selectKeyRaw,
   selectCurrentStep,
   selectHighlightStep,
-  selectShowHex,
   selectMatrixRowsLen,
   selectMatrixColsLen,
-  selectFakeColsLen
+  selectFakeColsLen,
+  selectCipherType
 } from './../store/selectors/stepInfoSelector.js';
-import { setHexText, setShowHex, setRowsLen, setColsLen, setFakeColsLen } from './../store/reducers/stepInfoReducer'
+import { setHexText, setRowsLen, setColsLen, setFakeColsLen } from './../store/reducers/stepInfoReducer'
 
 
 export default function MatrixDisplay() {
@@ -22,6 +22,8 @@ export default function MatrixDisplay() {
   // const [rows, setRows] = useState(5);
   const cols = useSelector(selectMatrixColsLen)
   // const [cols, setCols] = useState(9);
+
+  const cipherType = useSelector(selectCipherType)
 
   const fakeColsLen = useSelector(selectFakeColsLen)
 
@@ -58,14 +60,6 @@ export default function MatrixDisplay() {
 
   /* ---------- TEXT / HEX ---------- */
 
-  // const [showHex, setShowHex] = useState(true);
-  const showHex = useSelector(selectShowHex)
-
-  // const hexText = useMemo(() => {
-  //   if(activeStep !== 0) return
-  //   return plainText.split('').map(c => c.charCodeAt(0).toString(16).padStart(2, '0')).join('');
-  // }, [plainText]);
-
   const hexText = useSelector(selectHexText)
 
   useEffect(() => {
@@ -77,14 +71,14 @@ export default function MatrixDisplay() {
         ...row,
         tiles: row.tiles.map(tile => ({
           ...tile,
-          value: showHex ? (
+          value: cipherType === 'chained' ? (
             tile.id * 2 + 1 < hexText.length
               ? hexText.slice(tile.id * 2, tile.id * 2 + 2)
               : filler) : (tile.id < plainText.length ? plainText.slice(tile.id, tile.id+1) : filler),
         })),
       }))
     );
-  }, [hexText, showHex, plainText]);
+  }, [hexText, cipherType, plainText]);
 
   /* ---------- STEP LOGIC ---------- */
 
@@ -148,11 +142,16 @@ export default function MatrixDisplay() {
     const prev = prevStepRef.current;
     if (prev === currentStep) return;
 
+    console.log('prevstep:', prevStepRef.current)
+    console.log('currentstep:', currentStep)
+
     if (currentStep > prev) {
       // idemo DESNO → primeni currentStep
+      console.log('APPLYCURRENTSTEP')
       applyStep(currentStep);
     } else {
       // idemo LEVO → vrati prev
+      console.log('APPLYPREVSTEP')
       undoStep(prev);
     }
 
@@ -309,9 +308,8 @@ useEffect(()=>{
           >
             {/* Corner */}
             <div
-              className="flex items-center justify-center text-blue-500 text-bold rounded-md border border-gray-700/90 "
+              className="flex items-center justify-center font-bold text-blue-500 text-bold rounded-md border border-gray-700/90 "
               style={{ width: 64, height: 64 }}
-              // onClick={() => setShowHex(v => !v)}
               onClick={() => {
                 dispatch(setHexText(chainXOR(hexText, 123)))
                 const x = readMatrixRowMajor(matrixRows)

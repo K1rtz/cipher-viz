@@ -13,16 +13,14 @@ const initialState = {
   },
   plainText: '',
   hexText: '',
-  showHex: false,
+  cipherType: 'classic',
+  visualStep: -1,
 }
 
 const stepInfoSlice = createSlice({
   name: 'stepInfo',
   initialState,
   reducers: {
-    setShowHex(state, action) {
-      state.showHex = action.payload
-    },
     setHighlightStep(state, action) {
       state.highlightStep = action.payload
     },
@@ -52,7 +50,13 @@ const stepInfoSlice = createSlice({
     }},
     setHexText: (state, action)=> {{
       state.hexText = action.payload
-    }}
+    }},
+    setCipherType: (state, action)=> {{
+      state.cipherType = action.payload
+    }},
+    setVisualStep: (state, action)=>{
+      state.visualStep = action.payload
+    }
 
   }
 })
@@ -65,10 +69,11 @@ export const {
   setStepChange,
   setHighlightStep,
   setHexText,
-  setShowHex,
   setRowsLen,
   setColsLen,
-  setFakeColsLen
+  setFakeColsLen,
+  setCipherType,
+  setVisualStep
 } = stepInfoSlice.actions
 
 export default stepInfoSlice.reducer
