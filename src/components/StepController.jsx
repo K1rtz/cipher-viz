@@ -10,8 +10,9 @@ import {
   selectFakeColsLen,
   selectCipherType,
   selectVisualStep,
+  selectEngineSteps,
 } from './../store/selectors/stepInfoSelector.js'
-import { setVisualStep, setActiveStep, setPlainText, setHighlightStep, setCurrentStep, setKeyRaw, setHexText, setColsLen, setRowsLen, setFakeColsLen, setCipherType} from './../store/reducers/stepInfoReducer'
+import { setVisualStep, setActiveStep, setPlainText, setHighlightStep, setCurrentStep, setKeyRaw, setHexText, setColsLen, setRowsLen, setFakeColsLen, setCipherType, setEngineSteps} from './../store/reducers/stepInfoReducer'
 import { BiSolidRightArrow } from "react-icons/bi";
 import { BiSolidLeftArrow } from "react-icons/bi";
 
@@ -42,7 +43,7 @@ export default function StepController() {
   ];
 
 
-
+  const engineSteps = useSelector(selectEngineSteps)
   const dispatch = useDispatch()
   const matrixColsLen = useSelector(selectMatrixColsLen)
   const matrixRowsLen = useSelector(selectMatrixRowsLen)
@@ -123,8 +124,10 @@ export default function StepController() {
 
   const [confirmError, setConfirmError] = useState('');
 
-  const handleKeyConfirm = () =>{
+  const handleKeyConfirm = () =>{//ovde napraviti niz koraka
 
+
+//-------------------------------------------------------------------
     console.log('trenutni current step onconfirm:' + currentStep)
     if(raw.length === 0){
       setConfirmError('Enter at least one pair of digits.')
@@ -139,12 +142,79 @@ export default function StepController() {
     if(showKeyError === true){
       setShowKeyError(false);
     }
+//-------------------------------------------------------------------
+
+  if (cipherType === 'classic') {
+    console.log('classic');
+    console.log('raw key', raw);
+
+    const newSteps = createEngineStepsFromRaw(raw, 'classic');
+    dispatch(setEngineSteps(newSteps));
+  } 
+  else if (cipherType === 'chained') {
+    console.log('chained');
+    console.log('raw key', raw);
+
+    const newSteps = createEngineStepsFromRaw(raw, 'chained');
+    dispatch(setEngineSteps(newSteps));
+  }
+
+
     setFormatted(formatAsPairs(raw));
     setKeyDisplay(true);
     dispatch(setKeyRaw(raw))
 
     setKeyButtonDisabled(true);
   }
+
+function parseRawKeyToPairs(raw) {
+
+  const cleaned = raw.replace(/[^0-9]/g, '');
+
+  const pairs = [];
+  for (let i = 0; i < cleaned.length; i += 2) {
+    const a = Number(cleaned[i]);
+    const b = Number(cleaned[i + 1]);
+    pairs.push([a, b]);
+  }
+
+  return pairs;
+}
+
+function createEngineStepsFromRaw(raw, cipherType = 'classic') {
+  const pairs = parseRawKeyToPairs(raw);   // tvoja postojeća funkcija
+
+  const steps = [];
+
+  pairs.forEach((pair, index) => {
+    const axis = index % 2 === 0 ? 'x' : 'y';
+
+    // Ako je chained → prvo dodajemo XOR step
+    if (cipherType === 'chained') {
+      steps.push({
+        type: 'xor',
+        // numbers: undefined ili [] – kako ti odgovara
+        // axis: null ili undefined
+        stepIndex: steps.length,          // ili neki drugi način numerisanja
+        description: 'XOR with round key', // ili šta god da prikazuješ
+        // active: false,
+        // možeš dodati još polja ako treba (npr. round: Math.floor(index/2)+1)
+      });
+    }
+
+    // Zatim uvek dodajemo swap
+    steps.push({
+      type: 'swap',
+      numbers: pair,
+      axis: axis,
+      stepIndex: steps.length,
+      description: `Swap ${pair[0]} ↔ ${pair[1]} (${axis}-axis)`,
+      // highlight, positions, itd...
+    });
+  });
+
+  return steps;
+}
 
   const [showKeyError, setShowKeyError] = useState(false)
   const [showPlainTextError, setShowPlainTextError] = useState(false)
@@ -196,58 +266,9 @@ export default function StepController() {
 
 
 const cipherType = useSelector(selectCipherType)
-const visualSteps = useMemo(() => {
-  const steps = [];
 
 
-  for (let i = 0; i < pairs.length; i++) {
-    if (cipherType === 'chained') {
-      steps.push({ type: 'xor', engineStep: i });
-    }
-    steps.push({ type: 'swap', engineStep: i });
 
-  }
-  console.log('visualsteps:' , steps)
-  return steps;
-
-}, [pairs, cipherType]);
-
-const visualStep = useSelector(selectVisualStep)
-const [lastVisualStep, setLastVisualStep] = useState(visualStep);
-useEffect(()=>{
-  if(visualStep === -1) return
-  console.log(visualStep)
-  console.log(visualSteps[visualStep].type)
-  let x = false;
-  if(lastVisualStep < visualStep){
-    x = true
-  }else{
-    x = false
-  }
-  if(visualSteps[visualStep].type === 'swap'){
-    if(x) 
-    {      
-      dispatch(setHighlightStep(visualStep + 1))
-      dispatch(setCurrentStep(currentStep + 1))
-      console.log(visualStep)
-      console.log(highlightStep)
-    } 
-    else{
-      dispatch(setHighlightStep(visualStep))
-      dispatch(setCurrentStep(currentStep-1))
-    }    
-
-
-  }else{
-
-    if(x){
-      dispatch(setHighlightStep(visualStep + 1))
-    }else{
-      dispatch(setHighlightStep(visualStep))
-    }
-  }
-  setLastVisualStep(visualStep)
-},[visualStep])
 
 
 
@@ -411,17 +432,18 @@ useEffect(()=>{
 
               <div className="w-full text-gray-300 bg-gray-700/50 rounded px-2 py-1 text-sm flex flex-wrap gap-1">
 
-                {/* {visualSteps.map((step, i) =>{
+                {engineSteps.map((step, i) =>{
                   return(
                   <span
                     key={i}
                     className={`inline-flex items-center justify-center rounded px-1 leading-none py-1 pb-1.5
                     ${i === highlightStep ? 'text-blue-400 bg-blue-500/10 border border-blue-400 font-bold' : 'text-gray-300'}`}                                  >
-                    {step.type}
-                </span>
+                    {step.type === 'xor' ? 'XOR' : `(${step.numbers[0]}, ${step.numbers[1]})`
+  }                </span>
                   )})
-                } */}
-                {pairs.map((pair, i) => (
+                }
+
+                {/* {pairs.map((pair, i) => (
                   <div>
                   <span>
                     xor
@@ -433,7 +455,7 @@ useEffect(()=>{
                     {pair}
                 </span>
                 </div>
-                ))}
+                ))} */}
               </div>
             :
           <input
@@ -481,9 +503,9 @@ useEffect(()=>{
           <BiSolidLeftArrow/>
         </button>
         <button
-          className={`px-2 py-1.5 rounded text-gray-200  ${currentStep >= pairs.length - 1 ? 'bg-gray-600' : 'bg-blue-600'} `}
+          className={`px-2 py-1.5 rounded text-gray-200  ${currentStep >= engineSteps.length - 1 ? 'bg-gray-600' : 'bg-blue-600'} `}
           // disabled = {visualStep >= visualSteps.length - 1}
-          disabled = {currentStep >= pairs.length - 1}
+          disabled = {currentStep >= engineSteps.length - 1}
           onClick={() =>{
             dispatch(setHighlightStep(currentStep + 1));
             dispatch(setCurrentStep(currentStep + 1))

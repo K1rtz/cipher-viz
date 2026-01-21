@@ -11,7 +11,8 @@ import {
   selectMatrixRowsLen,
   selectMatrixColsLen,
   selectFakeColsLen,
-  selectCipherType
+  selectCipherType,
+  selectEngineSteps,
 } from './../store/selectors/stepInfoSelector.js';
 import { setHexText, setRowsLen, setColsLen, setFakeColsLen } from './../store/reducers/stepInfoReducer'
 
@@ -34,6 +35,13 @@ export default function MatrixDisplay() {
   const highlightStep = useSelector(selectHighlightStep);
 
   const dispatch = useDispatch()
+  const [isRowStep, setIsRowStep] = useState(false);
+
+
+
+  const [highlightedPositions, setHighlightedPositions] = useState([])
+
+  const engineSteps = useSelector(selectEngineSteps)
 
   /* ---------- HEADERS ---------- */
 
@@ -119,26 +127,52 @@ export default function MatrixDisplay() {
 
   const applyStep = step => {
     if (step < 0) return;
-    const [x, y] = getPair(step);
+    // const [x, y] = getPair(step);
+    // step % 2 === 0
+      // ? swapRowsByPosition(x, y)
+      // : swapColumnsByPosition(x, y);
+    console.log("ZOVEMOAPPLYSTEP")
+    if(engineSteps[step].type==='swap'){ 
+      setHighlightedPositions([engineSteps[step].numbers[0], engineSteps[step].numbers[1]]);
 
-    step % 2 === 0
-      ? swapRowsByPosition(x, y)
-      : swapColumnsByPosition(x, y);
+      if(engineSteps[step].axis === 'x'){
+        setIsRowStep(true)
+        swapRowsByPosition(engineSteps[step].numbers[0], engineSteps[step].numbers[1])
+      }else{
+        setIsRowStep(false)
+        swapColumnsByPosition(engineSteps[step].numbers[0], engineSteps[step].numbers[1])
+      }
+
+    }else{
+      setHighlightedPositions([]);
+      console.log('XOR UNAPRED')
+    }
+
   };
 
   const undoStep = step => {
     if (step < 0) return;
-    const [x, y] = getPair(step);
-
-    // swap je involucija
-    step % 2 === 0
-      ? swapRowsByPosition(x, y)
-      : swapColumnsByPosition(x, y);
+          console.log("ZOVEMOUNDO")
+    if(engineSteps[step].type==='swap'){
+      setHighlightedPositions([engineSteps[step].numbers[0], engineSteps[step].numbers[1]]);
+      if(engineSteps[step].axis === 'x'){
+        setIsRowStep(true)
+        swapRowsByPosition(engineSteps[step].numbers[0], engineSteps[step].numbers[1])
+      }else{
+        setIsRowStep(false)
+        swapColumnsByPosition(engineSteps[step].numbers[0], engineSteps[step].numbers[1])
+      }
+    }else{
+      setHighlightedPositions([]);
+      console.log('XOR UNAZAD ;)')
+    }
   };
 
   const prevStepRef = useRef(currentStep);
 
   useEffect(() => {
+    console.log("CURRENTSTEP::::", currentStep)
+    console.log("ENGINESTEP:", engineSteps[currentStep])
     const prev = prevStepRef.current;
     if (prev === currentStep) return;
 
@@ -160,14 +194,14 @@ export default function MatrixDisplay() {
 
   /* ---------- HIGHLIGHT ---------- */
 
-  const highlightedPositions = useMemo(() => {
-    if (highlightStep == null) return null;
-    const [x, y] = getPair(highlightStep);
-    if (Number.isNaN(x) || Number.isNaN(y)) return null;
-    return [x, y];
-  }, [highlightStep, keyRaw]);
+  // const highlightedPositions = useMemo(() => {
+  //   if (highlightStep == null) return null;
+  //   const [x, y] = getPair(highlightStep);
+  //   if (Number.isNaN(x) || Number.isNaN(y)) return null;
+  //   return [x, y];
+  // }, [highlightStep, keyRaw]);
 
-  const isRowStep = highlightStep % 2 === 0;
+
 
 
 
@@ -322,10 +356,8 @@ useEffect(()=>{
 
             {/* Column headers */}
             {columnHeaders.map((header, c) => {
-              const isHighlighted =
-                !isRowStep &&
-                highlightedPositions?.includes(c) &&
-                activeStep === 1;
+
+              const isHighlighted = !isRowStep && highlightedPositions?.includes(c) && activeStep === 1;
 
               return (
                 <motion.div
