@@ -18,30 +18,25 @@ import { setHexText, setRowsLen, setColsLen, setFakeColsLen } from './../store/r
 
 
 export default function MatrixDisplay() {
+  
+  const dispatch = useDispatch()
 
   const rows = useSelector(selectMatrixRowsLen)
-  // const [rows, setRows] = useState(5);
   const cols = useSelector(selectMatrixColsLen)
-  // const [cols, setCols] = useState(9);
-
   const cipherType = useSelector(selectCipherType)
-
   const fakeColsLen = useSelector(selectFakeColsLen)
-
   const activeStep = useSelector(selectActiveStep);
   const plainText = useSelector(selectPlainText);
   const currentStep = useSelector(selectCurrentStep);
   const keyRaw = useSelector(selectKeyRaw);
   const highlightStep = useSelector(selectHighlightStep);
-
-  const dispatch = useDispatch()
-  const [isRowStep, setIsRowStep] = useState(false);
-
-
-
-  const [highlightedPositions, setHighlightedPositions] = useState([])
-
   const engineSteps = useSelector(selectEngineSteps)
+  const hexText = useSelector(selectHexText)
+
+  const [isRowStep, setIsRowStep] = useState(false);
+  const [highlightedPositions, setHighlightedPositions] = useState([])
+  
+  
 
   /* ---------- HEADERS ---------- */
 
@@ -68,12 +63,31 @@ export default function MatrixDisplay() {
 
   /* ---------- TEXT / HEX ---------- */
 
-  const hexText = useSelector(selectHexText)
+
+  function resetText(){
+    if (plainText.length === 0) return
+    console.log('x')
+    const filler = ' ';
+    
+    setMatrixRows(prev =>
+      prev.map(row => ({
+        ...row,
+        tiles: row.tiles.map(tile => ({
+          ...tile,
+          value: cipherType === 'chained' ? (
+            tile.id * 2 + 1 < hexText.length
+              ? hexText.slice(tile.id * 2, tile.id * 2 + 2)
+              : filler) : (tile.id < plainText.length ? plainText.slice(tile.id, tile.id+1) : filler),
+        })),
+      }))
+    );
+  }
 
   useEffect(() => {
     if (plainText.length === 0) return
     console.log('x')
     const filler = ' ';
+    
     setMatrixRows(prev =>
       prev.map(row => ({
         ...row,
@@ -145,9 +159,11 @@ export default function MatrixDisplay() {
 
     }else{
       setHighlightedPositions([]);
+      dispatch(setHexText(chainXOR(hexText, 123)))
+      setTilePulse(true)
+      setTimeout(()=>setTilePulse(false),200)
       console.log('XOR UNAPRED')
     }
-
   };
 
   const undoStep = step => {
@@ -164,6 +180,9 @@ export default function MatrixDisplay() {
       }
     }else{
       setHighlightedPositions([]);
+      dispatch(setHexText(chainXORInverse(hexText, 123)))
+      setTilePulse(true)
+      setTimeout(()=>setTilePulse(false),200)
       console.log('XOR UNAZAD ;)')
     }
   };
@@ -223,6 +242,7 @@ function chainXOR(hexText, key) {
 
   return result.join("");
 }
+
 function chainXORInverse(hexText, key) {
   // Pretvori hex string u niz bajtova (ovo su encoded bajtovi)
   let bytes = [];
@@ -275,6 +295,7 @@ useEffect(() => {
       })),
     }))
   );
+  resetText()
 }, [rows, cols]);
 
 const [disableLayout, setDisableLayout] = useState(false);
@@ -330,6 +351,7 @@ useEffect(()=>{
   return () => clearTimeout(id);
 },[fakeColsLen])
 
+  const [tilePulse, setTilePulse] = useState(false);
 
   return (
     <div className="flex flex-col items-center py-6">
@@ -344,14 +366,8 @@ useEffect(()=>{
             <div
               className="flex items-center justify-center font-bold text-blue-500 text-bold rounded-md border border-gray-700/90 "
               style={{ width: 64, height: 64 }}
-              onClick={() => {
-                dispatch(setHexText(chainXOR(hexText, 123)))
-                const x = readMatrixRowMajor(matrixRows)
-                console.log(x)
-
-              }}
             >
-              C
+              {cipherType === 'classic' ? 'C' : 'HEX'}
             </div>
 
             {/* Column headers */}
@@ -365,7 +381,7 @@ useEffect(()=>{
                   layout 
                   animate={{
                     backgroundColor: isHighlighted
-                      ? 'rgba(59,130,246,0.35)'
+                      ? 'rgba(59,130,226,0.45)'
                       : 'rgba(31,41,55,0.3)',
                     color: '#fff',
                   }}
@@ -412,8 +428,14 @@ useEffect(()=>{
                       className={`flex items-center justify-center rounded-lg font-mono text-xl font-bold border ${
                         tile.value === ' '
                           ? 'bg-gray-800/50 text-gray-600 border-gray-700/50'
-                          : 'bg-blue-800/90 text-white border-blue-400 shadow-md'
-                      }`}
+                          : 'bg-[#0f2161] text-white border border-blue-800 shadow-md'//bg-blue-800/90
+                      }
+                    ${tilePulse ? 'animate-pulse' : ''}
+                    `
+                    }
+                    animate={{
+                        scale: tilePulse ? 1.1 : 1,  
+                      }}
                       style={{ width: 64, height: 64 }}
                     >
                       {tile.value === ' ' ? 'X' : tile.value}
