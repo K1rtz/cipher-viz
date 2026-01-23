@@ -14,7 +14,7 @@ import {
   selectCipherType,
   selectEngineSteps,
 } from './../store/selectors/stepInfoSelector.js';
-import { setHexText, setRowsLen, setColsLen, setFakeColsLen } from './../store/reducers/stepInfoReducer'
+import { setHexText, setCurrentMatrixValue ,setRowsLen, setColsLen, setFakeColsLen } from './../store/reducers/stepInfoReducer'
 
 
 export default function MatrixDisplay() {
@@ -141,10 +141,6 @@ export default function MatrixDisplay() {
 
   const applyStep = step => {
     if (step < 0) return;
-    // const [x, y] = getPair(step);
-    // step % 2 === 0
-      // ? swapRowsByPosition(x, y)
-      // : swapColumnsByPosition(x, y);
     console.log("ZOVEMOAPPLYSTEP")
     if(engineSteps[step].type==='swap'){ 
       setHighlightedPositions([engineSteps[step].numbers[0], engineSteps[step].numbers[1]]);
@@ -168,6 +164,7 @@ export default function MatrixDisplay() {
 
   const undoStep = step => {
     if (step < 0) return;
+
           console.log("ZOVEMOUNDO")
     if(engineSteps[step].type==='swap'){
       setHighlightedPositions([engineSteps[step].numbers[0], engineSteps[step].numbers[1]]);
@@ -267,8 +264,15 @@ function chainXORInverse(hexText, key) {
   
   /* ---------- RENDER ---------- */
 function readMatrixRowMajor(matrixRows) {
-  return matrixRows.flatMap(row => row.tiles.map(t => t.value)).join('');
+  console.log('READING')
+  const matrixValue =  matrixRows.flatMap(row => row.tiles.map(t => t.value)).join('');
+  dispatch(setCurrentMatrixValue(matrixValue))
+  return matrixValue
 }
+
+useEffect(()=>{
+  readMatrixRowMajor(matrixRows)
+},[activeStep])
 
 const [colsSwap, setColsSwap] = useState(false);
 
@@ -373,12 +377,16 @@ useEffect(()=>{
             {/* Column headers */}
             {columnHeaders.map((header, c) => {
 
-              const isHighlighted = !isRowStep && highlightedPositions?.includes(c) && activeStep === 1;
+              const isHighlighted = !isRowStep && highlightedPositions?.includes(c) && (activeStep === 1 || activeStep === 3) ;
 
               return (
                 <motion.div
                   key={header.id}
-                  layout 
+                  layout
+                  initial={{
+                    backgroundColor: 'rgba(31,41,55,0.3)',  // default boja (ne-highlight)
+                    color: '#fff',
+                  }}
                   animate={{
                     backgroundColor: isHighlighted
                       ? 'rgba(59,130,226,0.45)'
@@ -399,13 +407,17 @@ useEffect(()=>{
               const isHighlighted =
                 isRowStep &&
                 highlightedPositions?.includes(r) &&
-                activeStep === 1;
+                (activeStep === 1 || activeStep === 3);
 
               return (
                 <React.Fragment key={row.rowId}>
                   {/* Row header */}
                   <motion.div
                     layout
+                    initial={{
+                      backgroundColor: 'rgba(31,41,55,0.3)',  // default boja (ne-highlight)
+                      color: '#fff',
+                    }}
                     animate={{
                       backgroundColor: isHighlighted
                         ? 'rgba(59,130,246,0.35)'

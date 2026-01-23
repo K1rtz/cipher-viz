@@ -11,3 +11,4 @@ export const selectFakeColsLen = (state) => state.stepInfo.matrixInfo.fakeColsLe
 export const selectCipherType = (state) => state.stepInfo.cipherType
 export const selectVisualStep = (state) => state.stepInfo.visualStep
 export const selectEngineSteps = (state) => state.stepInfo.engineSteps
+export const selectCurrentMatrixValue = (state) => state.stepInfo.currentMatrixValue

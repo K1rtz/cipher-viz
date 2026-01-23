@@ -1,5 +1,7 @@
 import React, {useEffect, useMemo, useState} from 'react';
 import { useSelector, useDispatch } from 'react-redux'
+import { motion } from 'framer-motion';
+import { FiCopy } from 'react-icons/fi';
 import {
   selectActiveStep,
   selectPlainText,
@@ -11,38 +13,54 @@ import {
   selectCipherType,
   selectVisualStep,
   selectEngineSteps,
+  selectCurrentMatrixValue,
 } from './../store/selectors/stepInfoSelector.js'
 import { setVisualStep, setActiveStep, setPlainText, setHighlightStep, setCurrentStep, setKeyRaw, setHexText, setColsLen, setRowsLen, setFakeColsLen, setCipherType, setEngineSteps} from './../store/reducers/stepInfoReducer'
 import { BiSolidRightArrow } from "react-icons/bi";
 import { BiSolidLeftArrow } from "react-icons/bi";
+import { div } from 'framer-motion/client';
 
 export default function StepController() {
   const steps = [
     {
       id: 1,
-      title: 'Encryption setup',
+      title: '1. Encryption setup',
       description: 'Enter the original message to be encrypted, select the encryption algorithm (e.g., Chained XOR, Shifting XOR, Classic Double Transposition), and configure the matrix dimensions. ' + 'This step serves as the initial configuration for the encryption process, combining message input with algorithm choice and matrix setup.',
-      keyText: 'Message:'
+      keyText: 'Message:',
     },
     {
       id: 2,
-      title: 'Transposition key and steps simulation',
+      title: '2. Transposition key and steps in encryption simulation',
       description:
         'Enter a key with an even number of digits.  \n' +
         '  Then simulate the transposition step by step using the left/right arrows.\n' + 'Highlighted pair represents previous swap.',
       keyText: 'Key:'
+      
     },
     {
       id: 3,
-      title: 'Encrypted Output',
+      title: '3. Encrypted Output',
       description:
         'This step displays the final encrypted message obtained after completing both row and column transpositions. ' +
         'The resulting ciphertext illustrates how double transposition significantly changes the original text while preserving all characters.',
       keyText: ''
-    }
+    },
+    {
+      id: 4,
+      title: '4. Transposition key and steps in decryption simulation',
+      description:'Now decrypt the message step by step by applying the key in reverse order. Use the arrows to simulate each decryption step.',
+      keyText: ''
+    },
+    {
+      id: 5,
+      title: '5. Decryption Output',
+      description:'This step displays the final decrypted message, which should match the original input after successful decryption.',
+      keyText: ''
+    },
+    
   ];
 
-
+  const currentMatrixValue = useSelector(selectCurrentMatrixValue)
   const engineSteps = useSelector(selectEngineSteps)
   const dispatch = useDispatch()
   const matrixColsLen = useSelector(selectMatrixColsLen)
@@ -59,6 +77,9 @@ export default function StepController() {
   const [formatted, setFormatted] = useState('');
 
   const highlightStep = useSelector(selectHighlightStep)
+
+
+  const [isDecryptMode, setIsDecryptMode] = useState(false)
 
 
   const formatAsPairs = (digits) => {
@@ -189,6 +210,7 @@ function createEngineStepsFromRaw(raw, cipherType = 'classic') {
   pairs.forEach((pair, index) => {
     const axis = index % 2 === 0 ? 'x' : 'y';
 
+    
     // Ako je chained → prvo dodajemo XOR step
     if (cipherType === 'chained') {
       steps.push({
@@ -211,8 +233,9 @@ function createEngineStepsFromRaw(raw, cipherType = 'classic') {
       description: `Swap ${pair[0]} ↔ ${pair[1]} (${axis}-axis)`,
       // highlight, positions, itd...
     });
-  });
 
+ 
+  });
   return steps;
 }
 
@@ -221,6 +244,9 @@ function createEngineStepsFromRaw(raw, cipherType = 'classic') {
   const [keyButtonDisabled, setKeyButtonDisabled] = useState(false)
 
   const handlePrevious = () => {
+    if(activeStep -1 === 2){
+      setIsDecryptMode(false)
+    }
     //TODO: Ovde je ceo step u levo kada sa vracamo sta da se radi potencijalno ce biti samo gray out dok se ne izvrsi middle
     dispatch(setActiveStep(activeStep - 1));
 
@@ -237,6 +263,9 @@ function createEngineStepsFromRaw(raw, cipherType = 'classic') {
       dispatch(setHexText(hexText))
       dispatch(setPlainText(fullText))
       
+    }
+    if(activeStep + 1 === 3){
+      setIsDecryptMode(true)
     }
     
     dispatch(setActiveStep(activeStep + 1));
@@ -273,19 +302,15 @@ const cipherType = useSelector(selectCipherType)
 
 
   return (
-    <div className='px-6 pt-6 min-h-[250px]'>
-    <div className="bg-gray-900/80 min-h-[170px] backdrop-blur-md p-6 rounded-xl shadow-lg border border-gray-700/50 transition-all duration-300">
+    <div className='px-6 pt-6 '>
+    <div className="bg-gray-900/80  backdrop-blur-md p-6 rounded-xl shadow-lg border border-gray-700/50 transition-all duration-300 min-h-[220px] flex flex-col ">
       <div className="flex items-center justify-between mb-2">
         <h3 className="text-2xl font-bold text-white bg-linear-to-r from-blue-400 to-purple-500 bg-clip-text">
          {steps[activeStep].title}
         </h3>
+
         <div className="flex gap-3">
-          {/* <button
-            onClick={()=>{stringToHex(plainText)}}
-            className={`px-4 py-2 rounded-lg font-medium transition-all duration-200 bg-blue-600 hover:bg-blue-700 text-white shadow-md`}
-          >
-            XOR
-          </button> */}
+
           <button
             onClick={handlePrevious}
             disabled={activeStep === 0}
@@ -311,6 +336,56 @@ const cipherType = useSelector(selectCipherType)
         </div>
       </div>
       <p className="text-gray-300 text-sm leading-relaxed">{steps[activeStep].description}</p>
+
+{activeStep === 2 && (
+<div className="mt-4 flex flex-col gap-2">
+  <p className="text-sm font-bold text-gray-200">Encrypted message:</p>
+  
+  <div className="flex items-center gap-3 bg-gray-800/60 rounded px-2 py-1 min-h-9 border border-gray-700/50">
+    <p className="text-gray-200 font-mono break-all flex-1">
+      {currentMatrixValue}
+      {/* {cipherType === 'chained' ? hexText : plainText} */}
+    </p>
+    
+    <button
+      onClick={() => {
+        const text = cipherType === 'chained' ? currentMatrixValue : currentMatrixValue;
+        navigator.clipboard.writeText(text);
+      }}
+      className="text-gray-400 hover:text-blue-400 transition-colors p-1 rounded hover:bg-gray-700/50"
+      title="Copy to clipboard"
+    >
+      <FiCopy className="w-5 h-5" />
+    </button>
+  </div>
+</div>
+)}
+
+{activeStep === 4 && (
+<div className="mt-4 flex flex-col gap-2">
+  <p className="text-sm font-bold text-gray-200">Encrypted message:</p>
+  
+  <div className="flex items-center gap-3 bg-gray-800/60 rounded px-3 py-2 min-h-9border border-gray-700/50">
+    <p className="text-gray-200 font-mono break-all flex-1">
+      {cipherType === 'chained' ? currentMatrixValue : currentMatrixValue}
+    </p>
+    
+    <button
+      onClick={() => {
+        const text = cipherType === 'chained' ? currentMatrixValue : currentMatrixValue;
+        navigator.clipboard.writeText(text);
+        // opciono: možeš dodati toast ili promenu ikone na kratko
+        // npr. setCopied(true); setTimeout(() => setCopied(false), 2000);
+      }}
+      className="text-gray-400 hover:text-blue-400 transition-colors p-1 rounded hover:bg-gray-700/50"
+      title="Copy to clipboard"
+    >
+      <FiCopy className="w-5 h-5" />
+    </button>
+  </div>
+</div>
+)}
+
 {activeStep === 0 && (
   <div className="mt-4 flex items-center gap-3">
 
@@ -334,8 +409,7 @@ const cipherType = useSelector(selectCipherType)
             )
           );
         }}
-        className="w-full text-gray-200 bg-gray-700/60 rounded px-3 py-2 pr-12 text-sm
-                   focus:outline-none focus:ring-2 focus:ring-blue-500"
+        className="w-full text-gray-200 bg-gray-700/60 rounded px-3 py-2 pr-12 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
         placeholder="Message"
       />
 
@@ -417,99 +491,125 @@ const cipherType = useSelector(selectCipherType)
 )}
 
 
-
+        <div className={`text-white text-m mt-3 ${(activeStep === 1 || activeStep === 3) ? 'visible' : 'hidden'}`}>
+          {/* {if(activeStep === 1)
+            {
+              keyButtonDisabled ? 'Encryption steps:' : 'Enter key:'
+            }
+            } */}
+            <div className={`${activeStep===1 ? 'visible':'hidden'}`}>{keyButtonDisabled ? 'Encryption steps:' : 'Enter key:'}</div>
+            <div className={`${activeStep===3 ? 'visible':'hidden'}`}>Decryption steps:</div>
+        </div>
       {/*//GLAVNI STEP*/}
       <div
-        className={`flex items-start gap-2 mt-4 ${
-          activeStep === 1 ? 'flex' : 'hidden'
+        className={`flex items-start gap-2 mt-1 ${
+          (activeStep === 1 ||activeStep == 3) ? 'flex' : 'hidden'
         }`}
       >
-
+        
         <div className="flex-1">
           {
-
             keyDisplay ?
-
-              <div className="w-full text-gray-300 bg-gray-700/50 rounded px-2 py-1 text-sm flex flex-wrap gap-1">
-
-                {engineSteps.map((step, i) =>{
-                  return(
-                  <span
-                    key={i}
-                    className={`inline-flex items-center justify-center rounded px-1 leading-none py-1 pb-1.5
-                    ${i === highlightStep ? 'text-blue-400 bg-blue-500/10 border border-blue-400 font-bold' : 'text-gray-300'}`}                                  >
-                    {step.type === 'xor' ? 'XOR' : `(${step.numbers[0]}, ${step.numbers[1]})`
-  }                </span>
-                  )})
-                }
-
-                {/* {pairs.map((pair, i) => (
-                  <div>
-                  <span>
-                    xor
-                  </span>
-                  <span
-                    key={i}
-                    className={`inline-flex items-center justify-center rounded px-1 leading-none py-1 pb-1.5
-                    ${i === highlightStep ? 'text-blue-400 bg-blue-500/10 border border-blue-400 font-bold' : 'text-gray-300'}`}                                  >
-                    {pair}
-                </span>
-                </div>
-                ))} */}
+              <div className="w-full text-gray-300 bg-gray-700/50 rounded items-center px-2 py-1.5 text-sm flex flex-wrap gap-1 min-h-9">
+              {(isDecryptMode ? [...engineSteps].reverse() : engineSteps).map((step, originalIndex) => {
+                  const displayIndex = isDecryptMode 
+                    ? engineSteps.length - 1 - originalIndex 
+                    : originalIndex;
+                  return (
+                    <span
+                      key={displayIndex}
+                      className={`inline-flex items-center justify-center rounded px-1.5 py-[2px] text-sm min-w-[3.2rem]
+                        ${displayIndex === highlightStep 
+                          ? 'text-blue-200 bg-blue-500/20 border border-blue-400/50 font-bold' 
+                          : 'text-gray-300 bg-gray-700/40'}
+                      `}
+                    >
+                      {step.type === 'xor' ? 'XOR' : `(${step.numbers[0]}, ${step.numbers[1]})`}
+                    </span>
+                  );
+                })}
               </div>
-            :
-          <input
-            type="text"
-            value={formatAsPairs(raw)}
-            onChange={(e) => {
+              :
+              <input
+                type="text"
+                value={formatAsPairs(raw)}
+                onChange={(e) => {
 
-              const digitsOnly = e.target.value.replace(/[^0-9]/g, '');
-              setRaw(digitsOnly);
-            }}
-            onKeyDown={(e) => {
-              if (e.key === 'Backspace') {
-                e.preventDefault();
-                setRaw((prev) => prev.slice(0, -1));
-              }
-            }}
-            className="w-full text-gray-300 bg-gray-700/50 rounded px-2 py-1 text-sm"
-          />
-
-          }
+                  const digitsOnly = e.target.value.replace(/[^0-9]/g, '');
+                  setRaw(digitsOnly);
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Backspace') {
+                    e.preventDefault();
+                    setRaw((prev) => prev.slice(0, -1));
+                  }
+                }}
+                className="w-full text-gray-200 bg-gray-700/60 rounded px-3 py-2 pr-12 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+        }
           {showKeyError && (
             <p className="mt-1 text-xs text-red-400">
               {confirmError}
             </p>
           )}
         </div>
-        <button
-          className={`px-3 text-sm py-1 rounded text-white  ${keyButtonDisabled? 'bg-gray-800' : 'bg-blue-600 hover:bg-blue-500'} `}
+
+        <div>
+
+        <button 
+          className={` ${ activeStep === 1 ? 'visible' : 'hidden' } px-3 text-sm py-2 rounded  text-white  ${keyButtonDisabled? 'bg-gray-800' : 'bg-blue-600 hover:bg-blue-500'} `}
           disabled={keyButtonDisabled}
-          onClick={handleKeyConfirm}//TODO nema vise generate substeps sad se substepovi unose rucno
-        >
+          onClick={handleKeyConfirm}
+          >
           Confirm
         </button>
+          </div>
         <button
-          className={`px-2 py-1.5 rounded text-gray-200  ${currentStep <= -1 ? 'bg-gray-600' : 'bg-blue-600'} `}
-          // disabled = {visualStep <= -1}
-          disabled = {currentStep <= -1}
+className={`
+    px-2 py-2 min-h-9 text-sm rounded text-gray-200 transition-colors
+    ${isDecryptMode 
+      ? 'bg-blue-600 hover:bg-blue-500'           // decrypt: zelena paleta
+      : 'bg-blue-600 hover:bg-blue-500'}            // encrypt: plava paleta
+    ${isDecryptMode 
+      ? (currentStep >= engineSteps.length - 1 ? 'opacity-50 cursor-not-allowed' : '')
+      : (currentStep <= -1 ? 'opacity-50 cursor-not-allowed' : '')}
+  `}          disabled = {isDecryptMode ? (currentStep >= engineSteps.length - 1) : (currentStep <= -1)}
           onClick={() =>{
-            dispatch(setHighlightStep(currentStep));
-            dispatch(setCurrentStep(currentStep - 1))
-            // dispatch(setVisualStep(visualStep - 1))
-            
-
+            if(!isDecryptMode){
+              dispatch(setHighlightStep(currentStep));
+              dispatch(setCurrentStep(currentStep - 1))
+            }else{
+            dispatch(setHighlightStep(currentStep + 1));
+            dispatch(setCurrentStep(currentStep + 1))
+            }
           }}>
           <BiSolidLeftArrow/>
         </button>
         <button
-          className={`px-2 py-1.5 rounded text-gray-200  ${currentStep >= engineSteps.length - 1 ? 'bg-gray-600' : 'bg-blue-600'} `}
-          // disabled = {visualStep >= visualSteps.length - 1}
-          disabled = {currentStep >= engineSteps.length - 1}
+className={`
+    px-2 py-2 min-h-9 rounded text-gray-200 transition-colors
+    ${isDecryptMode 
+      ? 'bg-blue-600 hover:bg-blue-500'           // decrypt: zelena
+      : 'bg-blue-600 hover:bg-blue-500'}            // encrypt: plava
+    ${isDecryptMode 
+      ? (currentStep <= -1 ? 'opacity-50 cursor-not-allowed' : '')
+      : (currentStep >= engineSteps.length - 1 ? 'opacity-50 cursor-not-allowed' : '')}
+  `}          // disabled = {visualStep >= visualSteps.length - 1}
+          // disabled = {currentStep >= engineSteps.length - 1}
+          disabled = {isDecryptMode ? (currentStep <= -1) : (currentStep >= engineSteps.length - 1)}
+
+
           onClick={() =>{
-            dispatch(setHighlightStep(currentStep + 1));
+            if(!isDecryptMode){
+
+                          dispatch(setHighlightStep(currentStep + 1));
             dispatch(setCurrentStep(currentStep + 1))
-            // dispatch(setVisualStep(visualStep + 1))
+            }else{
+              dispatch(setHighlightStep(currentStep));
+              dispatch(setCurrentStep(currentStep - 1))
+            }
+            // dispatch(setHighlightStep(currentStep + 1));
+            // dispatch(setCurrentStep(currentStep + 1))
 
           }}>
           <BiSolidRightArrow />
@@ -518,6 +618,13 @@ const cipherType = useSelector(selectCipherType)
 
 
     </div>
+    {/* <div className={`items-center flex justify-center mb-8 relative ${activeStep === 1 || activeStep === 3 ? 'visible' : 'hidden'} `}>
+      <span className='absolute top-3 text-blue-600 '>
+      {highlightStep == -1 ? `` : engineSteps[highlightStep]?.description}
+      </span>
+    </div> */}
+
     </div>
+    
   );
 }
