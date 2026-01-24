@@ -350,7 +350,7 @@ useEffect(()=>{
   const id = setTimeout(()=>{
     const delta = fakeColsLen < cols ? -1 : 1;
     changeCols(delta);
-  }, 10); // 25 fps
+  }, 10);
 
   return () => clearTimeout(id);
 },[fakeColsLen])

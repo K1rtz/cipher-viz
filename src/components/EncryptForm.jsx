@@ -62,6 +62,7 @@ function EncryptForm() {
 
     const keyTest = parseAndValidateKey(encryptionKey, config.rowsLength, config.columnsLength);
     let result
+    console.log(config)
     if(keyTest.valid){
       
       //CLASSIC VERSION
@@ -204,7 +205,8 @@ const [encryptionKey, setEncryptionKey] = useState("");
     const pairRegex = /\(\s*\d+\s*,\s*\d+\s*\)/g;
     const matches = text.match(pairRegex);
 
-
+    console.log(numRows)
+    console.log(numCols)
     // if(Number(numRows) * Number(numCols) < plainText.length){
       // return {valid: false, error: `Matrix is too small to handle this amount of data`}
     // }
@@ -230,6 +232,7 @@ const [encryptionKey, setEncryptionKey] = useState("");
       const isRowSwap = (i / 2) % 2 === 0; // 0.,2.,4. par → redovi; 1.,3.,5. → kolone
 
       if (isRowSwap) {
+        console.log(a,numRows,b,numRows)
         if (a >= numRows || b >= numRows) {
           return { valid: false, error: `Row swap (${a},${b}) is out of bounds [0-${numRows - 1}]` };
         }
@@ -390,7 +393,7 @@ const [encryptionKey, setEncryptionKey] = useState("");
             onClick={() => setEncryptionType("chained")}
             className={encryptionButtonClass("chained")}
           >
-            Chained XOR
+            Chain XOR
           </button>
         </div>
           
@@ -423,7 +426,9 @@ const [encryptionKey, setEncryptionKey] = useState("");
             <input
               type="text"
               value={config.rowsLength}
-              onChange={(e) => updateConfig("rowsLength", e.target.value)}
+              onChange={(e) => 
+                                updateConfig("rowsLength", e.target.value
+                )}
               className="w-full bg-gray-800/60 text-gray-200 px-2 py-1 rounded border border-gray-700"
             />
           </div>

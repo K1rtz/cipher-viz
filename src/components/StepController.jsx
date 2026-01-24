@@ -14,6 +14,7 @@ import {
   selectVisualStep,
   selectEngineSteps,
   selectCurrentMatrixValue,
+  selectKeyRaw,
 } from './../store/selectors/stepInfoSelector.js'
 import { setVisualStep, setActiveStep, setPlainText, setHighlightStep, setCurrentStep, setKeyRaw, setHexText, setColsLen, setRowsLen, setFakeColsLen, setCipherType, setEngineSteps} from './../store/reducers/stepInfoReducer'
 import { BiSolidRightArrow } from "react-icons/bi";
@@ -60,6 +61,7 @@ export default function StepController() {
     
   ];
 
+  const keyRaw = useSelector(selectKeyRaw)
   const currentMatrixValue = useSelector(selectCurrentMatrixValue)
   const engineSteps = useSelector(selectEngineSteps)
   const dispatch = useDispatch()
@@ -257,20 +259,52 @@ function createEngineStepsFromRaw(raw, cipherType = 'classic') {
 
   const handleNext = () => {
     //TODO: Ovde je isto kao gore samo u desno
-    if(activeStep === 0){
-      const fullText = plainText.padEnd(matrixRowsLen*matrixColsLen, 'X');
-      const hexText = fullText.split('').map(c => c.charCodeAt(0).toString(16).padStart(2, '0')).join('');
-      dispatch(setHexText(hexText))
-      dispatch(setPlainText(fullText))
+    // if(activeStep === 0){
+    //   const fullText = plainText.padEnd(matrixRowsLen*matrixColsLen, 'X');
+    //   const hexText = fullText.split('').map(c => c.charCodeAt(0).toString(16).padStart(2, '0')).join('');
+    //   dispatch(setHexText(hexText))
+    //   dispatch(setPlainText(fullText))
       
-    }
-    if(activeStep + 1 === 3){
-      setIsDecryptMode(true)
-    }
+    // }
+    // if(activeStep + 1 === 3){
+    //   setIsDecryptMode(true)
+    // }
     
-    dispatch(setActiveStep(activeStep + 1));
+    // dispatch(setActiveStep(activeStep + 1));
 
-    console.log(activeStep);
+    // console.log(activeStep);
+
+
+    let canProceed = true;
+    let errorMessage = "";
+    switch(activeStep){
+      case 0:
+        if(plainText.trim().length === 0){
+          canProceed = false;
+          errorMessage = "Unesite tekst pre prelaska na naredni korak."
+        }
+        break;
+      case 1:
+        if(!keyDisplay || keyRaw.length === 0 || currentStep < engineSteps.length-1){
+          canProceed = false;
+          errorMessage = "Zavrsite proces enkripcije pre narednog koraka."
+        }
+        break;
+      case 2:
+        setIsDecryptMode(true)
+        break;
+        
+        
+    }
+
+    if(canProceed){
+      dispatch(setActiveStep(activeStep + 1));
+    }else{
+      console.log('ERROR: ', errorMessage)
+    }
+
+
+
   };
 
 
@@ -363,7 +397,7 @@ const cipherType = useSelector(selectCipherType)
 
 {activeStep === 4 && (
 <div className="mt-4 flex flex-col gap-2">
-  <p className="text-sm font-bold text-gray-200">Encrypted message:</p>
+  <p className="text-sm font-bold text-gray-200">Decrypted message:</p>
   
   <div className="flex items-center gap-3 bg-gray-800/60 rounded px-3 py-2 min-h-9border border-gray-700/50">
     <p className="text-gray-200 font-mono break-all flex-1">
