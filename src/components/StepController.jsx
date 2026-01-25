@@ -162,6 +162,35 @@ export default function StepController() {
       setShowKeyError(true)
       return;
     }
+
+    const digits = raw.split('').map(Number)
+    for(let i = 0; i < digits.length; i+=2){
+      const a = digits[i]
+      const b = digits[i+1]
+      const isRowSwap = (i/2)%2 === 0;
+
+      if(isRowSwap){
+        if( a >= matrixRowsLen || b >= matrixRowsLen){
+          setConfirmError(`Row swap (${a},${b}) is out of bounds. Rows: 0 to ${matrixRowsLen - 1}`);
+          setShowKeyError(true);
+          return
+        }
+      }
+      else {
+        if (a >= matrixColsLen || b >= matrixColsLen) {
+          setConfirmError(`Column swap (${a},${b}) is out of bounds. Columns: 0 to ${matrixColsLen - 1}`);
+          setShowKeyError(true);
+          return;
+        }
+      } 
+    }
+
+
+    console.log('-------------------------------------------------------------')
+    console.log('raw:', raw)
+    console.log('rows:', matrixRowsLen)
+    console.log('cols:', matrixColsLen)
+    console.log('-------------------------------------------------------------')
     if(showKeyError === true){
       setShowKeyError(false);
     }
@@ -249,8 +278,14 @@ function createEngineStepsFromRaw(raw, cipherType = 'classic') {
     if(activeStep -1 === 2){
       setIsDecryptMode(false)
     }
+    
+
+    
     //TODO: Ovde je ceo step u levo kada sa vracamo sta da se radi potencijalno ce biti samo gray out dok se ne izvrsi middle
     dispatch(setActiveStep(activeStep - 1));
+
+
+
 
   
   };
@@ -293,8 +328,7 @@ function createEngineStepsFromRaw(raw, cipherType = 'classic') {
       case 2:
         setIsDecryptMode(true)
         break;
-        
-        
+      
     }
 
     if(canProceed){
