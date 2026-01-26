@@ -318,6 +318,10 @@ function createEngineStepsFromRaw(raw, cipherType = 'classic') {
           canProceed = false;
           errorMessage = "Unesite tekst pre prelaska na naredni korak."
         }
+        const fullText = plainText.padEnd(matrixRowsLen*matrixColsLen, 'X');
+        const hexText = fullText.split('').map(c => c.charCodeAt(0).toString(16).padStart(2, '0')).join('');
+        dispatch(setHexText(hexText))
+        dispatch(setPlainText(fullText))
         break;
       case 1:
         if(!keyDisplay || keyRaw.length === 0 || currentStep < engineSteps.length-1){
@@ -364,7 +368,17 @@ function createEngineStepsFromRaw(raw, cipherType = 'classic') {
 
 const cipherType = useSelector(selectCipherType)
 
-
+function hexToString(hex) {
+  // Uklanja sve razmake i ne-hex karaktere (opciono)
+  const cleanHex = hex.replace(/[^0-9A-Fa-f]/g, '');
+  
+  let result = '';
+  for (let i = 0; i < cleanHex.length; i += 2) {
+    const byte = cleanHex.substr(i, 2);
+    result += String.fromCharCode(parseInt(byte, 16));
+  }
+  return result;
+}
 
 
 
@@ -436,20 +450,24 @@ const cipherType = useSelector(selectCipherType)
   <div className="flex items-center gap-3 bg-gray-800/60 rounded px-3 py-2 min-h-9border border-gray-700/50">
     <p className="text-gray-200 font-mono break-all flex-1">
       {cipherType === 'chained' ? currentMatrixValue : currentMatrixValue}
-    </p>
+    </p> 
     
     <button
       onClick={() => {
         const text = cipherType === 'chained' ? currentMatrixValue : currentMatrixValue;
         navigator.clipboard.writeText(text);
-        // opciono: možeš dodati toast ili promenu ikone na kratko
-        // npr. setCopied(true); setTimeout(() => setCopied(false), 2000);
+
       }}
       className="text-gray-400 hover:text-blue-400 transition-colors p-1 rounded hover:bg-gray-700/50"
       title="Copy to clipboard"
     >
       <FiCopy className="w-5 h-5" />
     </button>
+  </div>
+  <div className={` ${cipherType === 'classic' ? 'hidden' : 'flex'}  flex items-center gap-3 bg-gray-800/60 rounded px-3 py-2 min-h-9border border-gray-700/50`}>
+    <p className="text-gray-200 font-mono break-all flex-1">
+      {hexToString(currentMatrixValue)}
+    </p> 
   </div>
 </div>
 )}
@@ -500,7 +518,7 @@ const cipherType = useSelector(selectCipherType)
 
         }
 
-        dispatch(setXorMode(e.target.value))
+        setXorMode(e.target.value)
         
       }
       }
@@ -509,7 +527,6 @@ const cipherType = useSelector(selectCipherType)
     >
       <option value="classic">Classic</option>
       <option value="chained">Chained XOR</option>
-      {/* <option value="shifting">Shifting XOR</option> */}
     </select>
 
     {/* ROWS */}

@@ -14,7 +14,7 @@ import {
   selectCipherType,
   selectEngineSteps,
 } from './../store/selectors/stepInfoSelector.js';
-import { setHexText, setCurrentMatrixValue ,setRowsLen, setColsLen, setFakeColsLen } from './../store/reducers/stepInfoReducer'
+import { setHexText, setCurrentMatrixValue ,setRowsLen, setColsLen, setFakeColsLen, setPlainText } from './../store/reducers/stepInfoReducer'
 
 
 export default function MatrixDisplay() {
@@ -63,10 +63,34 @@ export default function MatrixDisplay() {
 
   /* ---------- TEXT / HEX ---------- */
 
+  function stringToHex(str) {
+    let hex = '';
+    for (let i = 0; i < str.length; i++) {
+      hex += str.charCodeAt(i).toString(16).padStart(2, '0');
+    }
+    console.log(hex);
+    return hex;
+  }
+
+  useEffect(()=>{
+    if(cipherType==='classic'){
+      setDisplayMode('char')
+    }else{
+      setDisplayMode('hex')
+    }
+  },[cipherType])
 
   function resetText(){
     if (plainText.length === 0) return
-    console.log('x')
+    let temp = plainText;
+    let tempHex = stringToHex(temp)
+    if(plainText.length > rows*cols){
+      
+      dispatch(setPlainText(temp.slice(0, rows*cols)))
+      dispatch(setHexText(stringToHex(temp)))
+    }
+    console.log(hexText)
+
     const filler = ' ';
     
     setMatrixRows(prev =>
@@ -75,9 +99,9 @@ export default function MatrixDisplay() {
         tiles: row.tiles.map(tile => ({
           ...tile,
           value: cipherType === 'chained' ? (
-            tile.id * 2 + 1 < hexText.length
-              ? hexText.slice(tile.id * 2, tile.id * 2 + 2)
-              : filler) : (tile.id < plainText.length ? plainText.slice(tile.id, tile.id+1) : filler),
+            tile.id * 2 + 1 < tempHex.length
+              ? tempHex.slice(tile.id * 2, tile.id * 2 + 2)
+              : filler) : (tile.id < temp.length ? temp.slice(tile.id, tile.id+1) : filler),
         })),
       }))
     );
@@ -85,7 +109,6 @@ export default function MatrixDisplay() {
 
   useEffect(() => {
     if (plainText.length === 0) return
-    console.log('x')
     const filler = ' ';
     
     setMatrixRows(prev =>
@@ -100,6 +123,7 @@ export default function MatrixDisplay() {
         })),
       }))
     );
+
   }, [hexText, cipherType, plainText]);
 
   /* ---------- STEP LOGIC ---------- */
@@ -210,16 +234,6 @@ export default function MatrixDisplay() {
 
   /* ---------- HIGHLIGHT ---------- */
 
-  // const highlightedPositions = useMemo(() => {
-  //   if (highlightStep == null) return null;
-  //   const [x, y] = getPair(highlightStep);
-  //   if (Number.isNaN(x) || Number.isNaN(y)) return null;
-  //   return [x, y];
-  // }, [highlightStep, keyRaw]);
-
-
-
-
 
 function chainXOR(hexText, key) {
   // Pretvori hex string u niz bajtova
@@ -276,7 +290,6 @@ useEffect(()=>{
 
 const [colsSwap, setColsSwap] = useState(false);
 
-
 useEffect(() => {
   const content = readMatrixRowMajor(matrixRows);
   
@@ -305,9 +318,7 @@ useEffect(() => {
 const [disableLayout, setDisableLayout] = useState(false);
 
 const changeCols = delta => {
-  console.log(delta)
   setDisableLayout(true);
-
   setColumnHeaders(prev => {
     const nextCols = Math.max(1, prev.length + delta);
     return Array.from({ length: nextCols }, (_, i) => ({
@@ -357,6 +368,21 @@ useEffect(()=>{
 
   const [tilePulse, setTilePulse] = useState(false);
 
+
+const [displayMode, setDisplayMode] = useState('char'); // 'char' ili 'hex'
+const toggleDisplayMode = () => {
+  setDisplayMode(prev => prev === 'char' ? 'hex' : 'char');
+};
+
+function hexToChar(hexPair) {
+  if (!hexPair || hexPair.length !== 2) return '?';
+  try {
+    const byte = parseInt(hexPair, 16);
+    return String.fromCharCode(byte);
+  } catch {
+    return '?';
+  }
+}
   return (
     <div className="flex flex-col items-center py-6">
 
@@ -370,8 +396,13 @@ useEffect(()=>{
             <div
               className="flex items-center justify-center font-bold text-blue-500 text-bold rounded-md border border-gray-700/90 "
               style={{ width: 64, height: 64 }}
+              // onClick={()=>console.log(readMatrixRowMajor(matrixRows))}
+              onClick={toggleDisplayMode}
             >
-              {cipherType === 'classic' ? 'C' : 'HEX'}
+              {/* {cipherType === 'classic' ? 'C' : 'HEX'}
+               */}
+               {/* {displayMode === 'char' ? (cipherType !== 'classic' ? 'C' : 'HEX') : 'C'} */}
+               {cipherType === 'classic' ? 'C' : (displayMode === 'char' ? 'C' : 'HEX')}
             </div>
 
             {/* Column headers */}
@@ -437,8 +468,8 @@ useEffect(()=>{
                       key={tile.id}
                       layout 
                       transition={ { layout:  activeStep === 0 && disableLayout ? { duration: 0 } : {type: 'spring', stiffness: 80, damping: 20 }}}
-                      className={`flex items-center justify-center rounded-lg font-mono text-xl font-bold border ${
-                        tile.value === ' '
+                      className={`flex items-center justify-center rounded-lg font-mono text-xl font-bold border
+                        ${tile.value === ' '
                           ? 'bg-gray-800/50 text-gray-600 border-gray-700/50'
                           : 'bg-[#0f2161] text-white border border-blue-800 shadow-md'//bg-blue-800/90
                       }
@@ -450,8 +481,15 @@ useEffect(()=>{
                       }}
                       style={{ width: 64, height: 64 }}
                     >
-                      {tile.value === ' ' ? 'X' : tile.value}
-                    </motion.div>
+                    {tile.value === ' ' 
+                      ? 'X' 
+                      : cipherType === 'classic'
+                        ? tile.value 
+                        : (displayMode === 'char' 
+                          ? hexToChar(tile.value)
+                          : tile.value)
+                    }                    
+                </motion.div>
                   ))}
                 </React.Fragment>
               );
