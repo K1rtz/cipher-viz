@@ -15,8 +15,9 @@ import {
   selectEngineSteps,
   selectCurrentMatrixValue,
   selectKeyRaw,
+  selectChainXorKey,
 } from './../store/selectors/stepInfoSelector.js'
-import { setVisualStep, setActiveStep, setPlainText, setHighlightStep, setCurrentStep, setKeyRaw, setHexText, setColsLen, setRowsLen, setFakeColsLen, setCipherType, setEngineSteps, resetStepInfo} from './../store/reducers/stepInfoReducer'
+import { setVisualStep, setActiveStep, setPlainText, setHighlightStep, setCurrentStep, setKeyRaw, setHexText, setColsLen, setRowsLen, setFakeColsLen, setCipherType, setEngineSteps, resetStepInfo, setChainXorKey} from './../store/reducers/stepInfoReducer'
 import { BiSolidRightArrow } from "react-icons/bi";
 import { BiSolidLeftArrow } from "react-icons/bi";
 import { div } from 'framer-motion/client';
@@ -69,6 +70,7 @@ export default function StepController() {
   const matrixRowsLen = useSelector(selectMatrixRowsLen)
   const maxLen = matrixColsLen * matrixRowsLen;
   const currentStep = useSelector(selectCurrentStep)
+  const chainXorKey = useSelector(selectChainXorKey)
 
   const fakeColsLen = useSelector(selectFakeColsLen)
 
@@ -451,27 +453,19 @@ function hexToString(hex) {
 <div className="mt-4 flex flex-col gap-2">
   <p className="text-sm font-bold text-gray-200">Decrypted message:</p>
   
-  <div className="flex items-center gap-3 bg-gray-800/60 rounded px-3 py-2 min-h-9 border border-gray-700/50">
-    <p className="text-gray-200 font-mono break-all flex-1">
+  <div className="flex relative items-center gap-3 bg-gray-800/60 rounded px-3 py-2 min-h-9 border border-gray-700/50">
+    <p className="text-gray-200 font-mono break-all flex-1 pr-12">
       {cipherType === 'chained' ? currentMatrixValue : currentMatrixValue}
-    </p> 
+    </p>
+    <span className='absolute right-4 text-[12px] text-gray-500 font-bold'>HEX</span>
     
-    <button
-      onClick={() => {
-        const text = cipherType === 'chained' ? currentMatrixValue : currentMatrixValue;
-        navigator.clipboard.writeText(text);
-
-      }}
-      className="text-gray-400 hover:text-blue-400 transition-colors p-1 rounded hover:bg-gray-700/50"
-      title="Copy to clipboard"
-    >
-      <FiCopy className="w-5 h-5" />
-    </button>
   </div>
-  <div className={` ${cipherType === 'classic' ? 'hidden' : 'flex'}  flex items-center gap-3 bg-gray-800/60 rounded px-3 py-2 min-h-9 border border-gray-700/50`}>
+  <div className={` ${cipherType === 'classic' ? 'hidden' : 'flex'} relative  flex items-center gap-3 bg-gray-800/60 rounded px-3 py-2 min-h-9 border border-gray-700/50`}>
     <p className="text-gray-200 font-mono break-all flex-1">
       {hexToString(currentMatrixValue)}
     </p> 
+        <span className='absolute right-4 text-[12px] text-gray-500 font-bold'>TXT</span>
+
   </div>
 </div>
 )}
@@ -499,7 +493,7 @@ function hexToString(hex) {
             )
           );
         }}
-        className="w-full text-gray-200 bg-gray-700/60 rounded px-3 py-2 pr-12 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+        className="w-full text-gray-200 placeholder-gray-500 bg-gray-700/60 rounded px-3 py-2 pr-12 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
         placeholder="Message"
       />
 
@@ -532,6 +526,39 @@ function hexToString(hex) {
       <option value="classic">Classic</option>
       <option value="chained">Chain XOR</option>
     </select>
+    <div className="relative flex-1 max-w-[10%]">
+      <input
+        type="number"
+        maxLength= {3}
+        max={255}
+        min={0}
+        value={chainXorKey}
+        disabled = {cipherType === 'classic'}
+    onChange={(e) => {
+      // const val = e.target.value;
+      // // Možeš dodatno ograničiti u kodu ako želiš
+      // if (val === '' || (Number(val) >= 0 && Number(val) <= 255)) {
+      //   dispatch(setChainXorKey(val));
+      // }
+      const val = e.target.value.trim(); // string
+
+      if (val === '') {
+        dispatch(setChainXorKey(123));      // ili 0 ako želiš default
+        return;
+      }
+
+      const num = Number(val);
+
+      // Proveri da li je validan broj i u opsegu
+      if (!isNaN(num) && num >= 0 && num <= 255) {
+        dispatch(setChainXorKey(num));     // ← šaljemo number!
+      }
+    }}
+        className="w-full text-gray-200 bg-gray-700/60 placeholder-gray-500 rounded px-2 py-2  text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+        placeholder="0-255"
+      />
+
+    </div>
 
     {/* ROWS */}
     <div className="flex items-center gap-1">
@@ -696,8 +723,7 @@ className={`
               dispatch(setHighlightStep(currentStep));
               dispatch(setCurrentStep(currentStep - 1))
             }
-            // dispatch(setHighlightStep(currentStep + 1));
-            // dispatch(setCurrentStep(currentStep + 1))
+
 
           }}>
           <BiSolidRightArrow />

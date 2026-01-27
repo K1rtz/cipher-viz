@@ -13,6 +13,7 @@ import {
   selectFakeColsLen,
   selectCipherType,
   selectEngineSteps,
+  selectChainXorKey,
 } from './../store/selectors/stepInfoSelector.js';
 import { setHexText, setCurrentMatrixValue ,setRowsLen, setColsLen, setFakeColsLen, setPlainText } from './../store/reducers/stepInfoReducer'
 
@@ -21,6 +22,7 @@ export default function MatrixDisplay() {
   
   const dispatch = useDispatch()
 
+  const chainXorKey = useSelector(selectChainXorKey)
   const rows = useSelector(selectMatrixRowsLen)
   const cols = useSelector(selectMatrixColsLen)
   const cipherType = useSelector(selectCipherType)
@@ -182,7 +184,7 @@ export default function MatrixDisplay() {
 
     }else{
       setHighlightedPositions([]);
-      dispatch(setHexText(chainXOR(hexText, 123)))
+      dispatch(setHexText(chainXOR(hexText, chainXorKey)))
       setTilePulse(true)
       setTimeout(()=>setTilePulse(false),200)
       console.log('XOR UNAPRED')
@@ -202,7 +204,7 @@ export default function MatrixDisplay() {
       }
     }else{
       setHighlightedPositions([]);
-      dispatch(setHexText(chainXORInverse(hexText, 123)))
+      dispatch(setHexText(chainXORInverse(hexText, chainXorKey)))
       setTilePulse(true)
       setTimeout(()=>setTilePulse(false),200)
       console.log('XOR UNAZAD ;)')
@@ -395,7 +397,6 @@ useEffect(() => {
     setIsRowStep(false);
     setTilePulse(false);
 
-    // Opciono: resetuj i matrixRows na prazno ako želiš
     const filler = ' ';
     setMatrixRows(
       Array.from({ length: rows }, (_, r) => ({
@@ -420,17 +421,19 @@ useEffect(() => {
             style={{ gridTemplateColumns: `64px repeat(${cols}, 64px)` }}
           >
             {/* Corner */}
-            <div
-              className="flex items-center justify-center font-bold text-blue-500 text-bold rounded-md border border-gray-700/90 "
-              style={{ width: 64, height: 64 }}
-              // onClick={()=>console.log(readMatrixRowMajor(matrixRows))}
-              onClick={toggleDisplayMode}
-            >
-              {/* {cipherType === 'classic' ? 'C' : 'HEX'}
-               */}
-               {/* {displayMode === 'char' ? (cipherType !== 'classic' ? 'C' : 'HEX') : 'C'} */}
-               {cipherType === 'classic' ? 'C' : (displayMode === 'char' ? 'C' : 'HEX')}
-            </div>
+<motion.div
+  layout
+  transition={{
+    layout: activeStep === 0 && disableLayout 
+      ? { duration: 0 } 
+      : { type: 'spring', stiffness: 80, damping: 20 }
+  }}
+  className="flex items-center justify-center font-bold text-blue-500 rounded-md border border-gray-700/90"
+  style={{ width: 64, height: 64 }}
+  onClick={toggleDisplayMode}
+>
+  {cipherType === 'classic' ? 'C' : (displayMode === 'char' ? 'C' : 'HEX')}
+</motion.div>
 
             {/* Column headers */}
             {columnHeaders.map((header, c) => {
@@ -473,7 +476,7 @@ useEffect(() => {
                   <motion.div
                     layout
                     initial={{
-                      backgroundColor: 'rgba(31,41,55,0.3)',  // default boja (ne-highlight)
+                      backgroundColor: 'rgba(31,41,55,0.3)', 
                       color: '#fff',
                     }}
                     animate={{

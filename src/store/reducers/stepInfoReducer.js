@@ -17,12 +17,16 @@ const initialState = {
   visualStep: -1,
   engineSteps: [],
   currentMatrixValue: '',
+  chainXorKey: 123,//default
 }
 
 const stepInfoSlice = createSlice({
   name: 'stepInfo',
   initialState,
   reducers: {
+    setChainXorKey(state, action){
+      state.chainXorKey = action.payload
+    },
     setCurrentMatrixValue(state, action){
       state.currentMatrixValue = action.payload
     },
@@ -78,6 +82,7 @@ const stepInfoSlice = createSlice({
       state.visualStep = -1;
       state.engineSteps = [];
       state.currentMatrixValue = '';
+      state.chainXorKey = 123
     },
 
   }
@@ -98,7 +103,8 @@ export const {
   setVisualStep,
   setEngineSteps,
   setCurrentMatrixValue,
-  resetStepInfo
+  resetStepInfo,
+  setChainXorKey,
 } = stepInfoSlice.actions
 
 export default stepInfoSlice.reducer

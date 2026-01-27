@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from "react";
+import React, {useEffect, useState, useRef} from "react";
 import {
   classicEncrypt,
   classicDecrypt,
@@ -113,7 +113,7 @@ function EncryptForm() {
     // console.log(encryptionKey)
   };
 
-
+  const fileInputRef = useRef(null);
 const handleFileUpload = (e) => {
   const file = e.target.files[0];
   if (!file) return;
@@ -132,17 +132,50 @@ const handleFileUpload = (e) => {
     if (config.removeSpaces) {
       text = text.replace(/\s+/g, "");
     }
-
     if (config.uppercase) {
       text = text.toUpperCase();
     }
 
     setPlainText(text);
     setResult(""); // resetuj rezultat jer je novi input
+
+    // KLJUČNO: resetuj input fajla da bi isti fajl mogao ponovo da se učita
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
   };
 
   reader.readAsText(file);
 };
+// const handleFileUpload = (e) => {
+//   const file = e.target.files[0];
+//   if (!file) return;
+
+//   if (!file.name.endsWith(".txt")) {
+//     alert("Only .txt files are allowed");
+//     return;
+//   }
+
+//   const reader = new FileReader();
+
+//   reader.onload = (event) => {
+//     let text = event.target.result;
+
+//     // optional preprocessing (poštujemo config)
+//     if (config.removeSpaces) {
+//       text = text.replace(/\s+/g, "");
+//     }
+
+//     if (config.uppercase) {
+//       text = text.toUpperCase();
+//     }
+
+//     setPlainText(text);
+//     setResult(""); // resetuj rezultat jer je novi input
+//   };
+
+//   reader.readAsText(file);
+// };
 const handleDownload = () => {
   if (!result) return;
 
@@ -312,6 +345,7 @@ const [encryptionKey, setEncryptionKey] = useState("");
                     accept=".txt"
                     onChange={handleFileUpload}
                     className="hidden"
+                    ref={fileInputRef}
                   />
                 </label>
               </div>

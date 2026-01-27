@@ -12,3 +12,4 @@ export const selectCipherType = (state) => state.stepInfo.cipherType
 export const selectVisualStep = (state) => state.stepInfo.visualStep
 export const selectEngineSteps = (state) => state.stepInfo.engineSteps
 export const selectCurrentMatrixValue = (state) => state.stepInfo.currentMatrixValue
+export const selectChainXorKey = (state) => state.stepInfo.chainXorKey
