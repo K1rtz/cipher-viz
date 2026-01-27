@@ -8,8 +8,8 @@ const initialState = {
   stepChange: false,
   matrixInfo:{
     rowsLen: 6,
-    colsLen: 9,
-    fakeColsLen: 9
+    colsLen: 8,
+    fakeColsLen: 8
   },
   plainText: '',
   hexText: '',
@@ -64,7 +64,21 @@ const stepInfoSlice = createSlice({
     }},
     setVisualStep: (state, action)=>{
       state.visualStep = action.payload
-    }
+    },
+    resetStepInfo: (state, action) => {
+      // return initialState;
+      state.activeStep = 0;
+      state.currentStep = -1;
+      state.keyRaw = "";
+      state.highlightStep = -1;
+      state.stepChange = false;
+      state.plainText = '';
+      state.hexText = '';
+      state.cipherType = 'classic';
+      state.visualStep = -1;
+      state.engineSteps = [];
+      state.currentMatrixValue = '';
+    },
 
   }
 })
@@ -83,7 +97,8 @@ export const {
   setCipherType,
   setVisualStep,
   setEngineSteps,
-  setCurrentMatrixValue
+  setCurrentMatrixValue,
+  resetStepInfo
 } = stepInfoSlice.actions
 
 export default stepInfoSlice.reducer

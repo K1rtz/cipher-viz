@@ -81,7 +81,7 @@ export default function MatrixDisplay() {
   },[cipherType])
 
   function resetText(){
-    if (plainText.length === 0) return
+    // if (plainText.length === 0) return
     let temp = plainText;
     let tempHex = stringToHex(temp)
     if(plainText.length > rows*cols){
@@ -108,7 +108,10 @@ export default function MatrixDisplay() {
   }
 
   useEffect(() => {
-    if (plainText.length === 0) return
+    if (plainText.length === 0){
+      resetText()
+      return
+    }
     const filler = ' ';
     
     setMatrixRows(prev =>
@@ -188,8 +191,6 @@ export default function MatrixDisplay() {
 
   const undoStep = step => {
     if (step < 0) return;
-
-          console.log("ZOVEMOUNDO")
     if(engineSteps[step].type==='swap'){
       setHighlightedPositions([engineSteps[step].numbers[0], engineSteps[step].numbers[1]]);
       if(engineSteps[step].axis === 'x'){
@@ -211,8 +212,11 @@ export default function MatrixDisplay() {
   const prevStepRef = useRef(currentStep);
 
   useEffect(() => {
-    console.log("CURRENTSTEP::::", currentStep)
-    console.log("ENGINESTEP:", engineSteps[currentStep])
+    if(activeStep === 0){
+      setHighlightedPositions([]);  
+      return
+    } 
+
     const prev = prevStepRef.current;
     if (prev === currentStep) return;
 
@@ -220,11 +224,9 @@ export default function MatrixDisplay() {
     console.log('currentstep:', currentStep)
 
     if (currentStep > prev) {
-      // idemo DESNO → primeni currentStep
       console.log('APPLYCURRENTSTEP')
       applyStep(currentStep);
     } else {
-      // idemo LEVO → vrati prev
       console.log('APPLYPREVSTEP')
       undoStep(prev);
     }
@@ -383,6 +385,31 @@ function hexToChar(hexPair) {
     return '?';
   }
 }
+
+useEffect(() => {
+  if (plainText === '' && keyRaw === '') {
+    setRowHeaders(Array.from({ length: rows }, (_, i) => ({ id: i, label: i })));
+    setColumnHeaders(Array.from({ length: cols }, (_, i) => ({ id: i, label: i })));
+
+    setHighlightedPositions([]);
+    setIsRowStep(false);
+    setTilePulse(false);
+
+    // Opciono: resetuj i matrixRows na prazno ako želiš
+    const filler = ' ';
+    setMatrixRows(
+      Array.from({ length: rows }, (_, r) => ({
+        rowId: r,
+        tiles: Array.from({ length: cols }, (_, c) => ({
+          id: r * cols + c,
+          colId: c,
+          value: filler,
+        })),
+      }))
+    );
+  }
+}, [plainText, keyRaw, rows, cols]);
+
   return (
     <div className="flex flex-col items-center py-6">
 

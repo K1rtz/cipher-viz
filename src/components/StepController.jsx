@@ -16,7 +16,7 @@ import {
   selectCurrentMatrixValue,
   selectKeyRaw,
 } from './../store/selectors/stepInfoSelector.js'
-import { setVisualStep, setActiveStep, setPlainText, setHighlightStep, setCurrentStep, setKeyRaw, setHexText, setColsLen, setRowsLen, setFakeColsLen, setCipherType, setEngineSteps} from './../store/reducers/stepInfoReducer'
+import { setVisualStep, setActiveStep, setPlainText, setHighlightStep, setCurrentStep, setKeyRaw, setHexText, setColsLen, setRowsLen, setFakeColsLen, setCipherType, setEngineSteps, resetStepInfo} from './../store/reducers/stepInfoReducer'
 import { BiSolidRightArrow } from "react-icons/bi";
 import { BiSolidLeftArrow } from "react-icons/bi";
 import { div } from 'framer-motion/client';
@@ -275,53 +275,39 @@ function createEngineStepsFromRaw(raw, cipherType = 'classic') {
   const [keyButtonDisabled, setKeyButtonDisabled] = useState(false)
 
   const handlePrevious = () => {
-    if(activeStep -1 === 2){
-      setIsDecryptMode(false)
-    }
-    
+    let canProceed = true;
+    let errorMessage = "";
 
-    
-    //TODO: Ovde je ceo step u levo kada sa vracamo sta da se radi potencijalno ce biti samo gray out dok se ne izvrsi middle
+
+    if(activeStep === 3){
+      if(currentStep !== engineSteps.length-1){  
+        return
+      }
+      setIsDecryptMode(false)
+      console.log('left')
+    }    
     dispatch(setActiveStep(activeStep - 1));
 
-
-
-
-  
   };
 
 
 
   const handleNext = () => {
-    //TODO: Ovde je isto kao gore samo u desno
-    // if(activeStep === 0){
-    //   const fullText = plainText.padEnd(matrixRowsLen*matrixColsLen, 'X');
-    //   const hexText = fullText.split('').map(c => c.charCodeAt(0).toString(16).padStart(2, '0')).join('');
-    //   dispatch(setHexText(hexText))
-    //   dispatch(setPlainText(fullText))
-      
-    // }
-    // if(activeStep + 1 === 3){
-    //   setIsDecryptMode(true)
-    // }
-    
-    // dispatch(setActiveStep(activeStep + 1));
-
-    // console.log(activeStep);
-
 
     let canProceed = true;
     let errorMessage = "";
+    console.log(plainText)
     switch(activeStep){
       case 0:
         if(plainText.trim().length === 0){
           canProceed = false;
           errorMessage = "Unesite tekst pre prelaska na naredni korak."
+        }else{
+          const fullText = plainText.padEnd(matrixRowsLen*matrixColsLen, 'X');
+          const hexText = fullText.split('').map(c => c.charCodeAt(0).toString(16).padStart(2, '0')).join('');
+          dispatch(setHexText(hexText))
+          dispatch(setPlainText(fullText))
         }
-        const fullText = plainText.padEnd(matrixRowsLen*matrixColsLen, 'X');
-        const hexText = fullText.split('').map(c => c.charCodeAt(0).toString(16).padStart(2, '0')).join('');
-        dispatch(setHexText(hexText))
-        dispatch(setPlainText(fullText))
         break;
       case 1:
         if(!keyDisplay || keyRaw.length === 0 || currentStep < engineSteps.length-1){
@@ -385,7 +371,7 @@ function hexToString(hex) {
 
   return (
     <div className='px-6 pt-6 '>
-    <div className="bg-gray-900/80  backdrop-blur-md p-6 rounded-xl shadow-lg border border-gray-700/50 transition-all duration-300 min-h-[220px] flex flex-col ">
+    <div className="bg-gray-900/80  backdrop-blur-md p-6 rounded-xl shadow-lg border border-gray-700/50 transition-all duration-300 min-h-[225px] flex flex-col ">
       <div className="flex items-center justify-between mb-2">
         <h3 className="text-2xl font-bold text-white bg-linear-to-r from-blue-400 to-purple-500 bg-clip-text">
          {steps[activeStep].title}
@@ -394,10 +380,28 @@ function hexToString(hex) {
         <div className="flex gap-3">
 
           <button
-            onClick={handlePrevious}
+            onClick={() =>{
+              dispatch(resetStepInfo())
+              setKeyButtonDisabled(false)
+              setKeyDisplay(false)
+              setIsDecryptMode(false)
+              setXorMode('classic')
+              setRaw('')
+            }}
             disabled={activeStep === 0}
             className={`px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
               activeStep === 0
+                ? 'bg-gray-700/50 text-gray-400 cursor-not-allowed'
+                : 'bg-blue-600 hover:red-blue-700 text-white shadow-md'
+            }`}
+          >
+            Reset
+          </button>
+          <button
+            onClick={handlePrevious}
+            disabled={activeStep <= 1}
+            className={`px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
+              activeStep <= 1 || (activeStep === 3 && currentStep != engineSteps.length-1)
                 ? 'bg-gray-700/50 text-gray-400 cursor-not-allowed'
                 : 'bg-blue-600 hover:bg-blue-700 text-white shadow-md'
             }`}
@@ -406,9 +410,9 @@ function hexToString(hex) {
           </button>
           <button
             onClick={handleNext}
-            disabled={activeStep === steps.length - 1}
+            disabled={activeStep === steps.length - 1 || (activeStep === 1 && currentStep !== engineSteps.length-1) || (activeStep === 3 && currentStep !== -1)}
             className={`px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
-              activeStep === steps.length - 1
+              activeStep === steps.length - 1 || (activeStep === 1 && !keyButtonDisabled) ||(activeStep === 1 && currentStep !== engineSteps.length-1 ) || (activeStep === 3 && currentStep !== -1)
                 ? 'bg-gray-700/50 text-gray-400 cursor-not-allowed'
                 : 'bg-blue-600 hover:bg-blue-700 text-white shadow-md'
             }`}
@@ -447,7 +451,7 @@ function hexToString(hex) {
 <div className="mt-4 flex flex-col gap-2">
   <p className="text-sm font-bold text-gray-200">Decrypted message:</p>
   
-  <div className="flex items-center gap-3 bg-gray-800/60 rounded px-3 py-2 min-h-9border border-gray-700/50">
+  <div className="flex items-center gap-3 bg-gray-800/60 rounded px-3 py-2 min-h-9 border border-gray-700/50">
     <p className="text-gray-200 font-mono break-all flex-1">
       {cipherType === 'chained' ? currentMatrixValue : currentMatrixValue}
     </p> 
@@ -464,7 +468,7 @@ function hexToString(hex) {
       <FiCopy className="w-5 h-5" />
     </button>
   </div>
-  <div className={` ${cipherType === 'classic' ? 'hidden' : 'flex'}  flex items-center gap-3 bg-gray-800/60 rounded px-3 py-2 min-h-9border border-gray-700/50`}>
+  <div className={` ${cipherType === 'classic' ? 'hidden' : 'flex'}  flex items-center gap-3 bg-gray-800/60 rounded px-3 py-2 min-h-9 border border-gray-700/50`}>
     <p className="text-gray-200 font-mono break-all flex-1">
       {hexToString(currentMatrixValue)}
     </p> 
@@ -526,7 +530,7 @@ function hexToString(hex) {
                  focus:outline-none focus:ring-2 focus:ring-blue-500"
     >
       <option value="classic">Classic</option>
-      <option value="chained">Chained XOR</option>
+      <option value="chained">Chain XOR</option>
     </select>
 
     {/* ROWS */}
@@ -619,7 +623,6 @@ function hexToString(hex) {
                 type="text"
                 value={formatAsPairs(raw)}
                 onChange={(e) => {
-
                   const digitsOnly = e.target.value.replace(/[^0-9]/g, '');
                   setRaw(digitsOnly);
                 }}
