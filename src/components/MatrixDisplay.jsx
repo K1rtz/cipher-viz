@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo, useRef } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { useDispatch, useSelector } from 'react-redux';
 import {
@@ -7,7 +7,6 @@ import {
   selectHexText,
   selectKeyRaw,
   selectCurrentStep,
-  selectHighlightStep,
   selectMatrixRowsLen,
   selectMatrixColsLen,
   selectFakeColsLen,
@@ -15,7 +14,7 @@ import {
   selectEngineSteps,
   selectChainXorKey,
 } from './../store/selectors/stepInfoSelector.js';
-import { setHexText, setCurrentMatrixValue ,setRowsLen, setColsLen, setFakeColsLen, setPlainText } from './../store/reducers/stepInfoReducer'
+import { setHexText, setCurrentMatrixValue , setColsLen, setPlainText } from './../store/reducers/stepInfoReducer'
 
 
 export default function MatrixDisplay() {
@@ -31,7 +30,6 @@ export default function MatrixDisplay() {
   const plainText = useSelector(selectPlainText);
   const currentStep = useSelector(selectCurrentStep);
   const keyRaw = useSelector(selectKeyRaw);
-  const highlightStep = useSelector(selectHighlightStep);
   const engineSteps = useSelector(selectEngineSteps)
   const hexText = useSelector(selectHexText)
 
@@ -133,10 +131,10 @@ export default function MatrixDisplay() {
 
   /* ---------- STEP LOGIC ---------- */
 
-  const getPair = step => {
-    const i = step * 2;
-    return [Number(keyRaw[i]), Number(keyRaw[i + 1])];
-  };
+  // const getPair = step => {
+  //   const i = step * 2;
+  //   return [Number(keyRaw[i]), Number(keyRaw[i + 1])];
+  // };
 
   const swapRowsByPosition = (i, j) => {
     setRowHeaders(prev => {
@@ -292,7 +290,7 @@ useEffect(()=>{
   readMatrixRowMajor(matrixRows)
 },[activeStep])
 
-const [colsSwap, setColsSwap] = useState(false);
+// const [colsSwap, setColsSwap] = useState(false);
 
 useEffect(() => {
   const content = readMatrixRowMajor(matrixRows);

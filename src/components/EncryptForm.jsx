@@ -4,10 +4,7 @@ import {
   classicDecrypt,
   xorEncrypt,
   xorDecrypt,
-  encryptDoubleTransposition,
-  decryptDoubleTransposition,
-  validateConfig} from "../crypto/doubleTransposition"
-import { div } from "framer-motion/client";
+  } from "../crypto/doubleTransposition"
 
 function EncryptForm() {
 
@@ -195,24 +192,24 @@ const handleDownload = () => {
   URL.revokeObjectURL(url);
 };
 
-  const formatAsPairs = (digits) => {
-    if (!digits) return '';
+  // const formatAsPairs = (digits) => {
+  //   if (!digits) return '';
 
 
-    const pairs = [];
-    for (let i = 0; i < digits.length; i += 2) {
-      const first = digits[i];
-      const second = digits[i + 1];
+  //   const pairs = [];
+  //   for (let i = 0; i < digits.length; i += 2) {
+  //     const first = digits[i];
+  //     const second = digits[i + 1];
 
-      if (second !== undefined) {
-        pairs.push(`(${first}-${second})`);
-      } else {
-        pairs.push(`(${first}-`);
-      }
-    }
+  //     if (second !== undefined) {
+  //       pairs.push(`(${first}-${second})`);
+  //     } else {
+  //       pairs.push(`(${first}-`);
+  //     }
+  //   }
 
-    return pairs.join(',');
-  };
+  //   return pairs.join(',');
+  // };
 const [encryptionKey, setEncryptionKey] = useState("");
 
   // useEffect(() => {
@@ -581,8 +578,6 @@ const [encryptionKey, setEncryptionKey] = useState("");
                 updateConfig("removeSpaces", e.target.checked)
                 if(!config.removeSpaces){
                   setPlainText(plainText.replace(/\s+/g, ""))
-                }else{
-
                 }
               }
               }

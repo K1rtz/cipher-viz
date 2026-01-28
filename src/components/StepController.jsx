@@ -1,6 +1,5 @@
-import React, {useEffect, useMemo, useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import { useSelector, useDispatch } from 'react-redux'
-import { motion } from 'framer-motion';
 import { FiCopy } from 'react-icons/fi';
 import {
   selectActiveStep,
@@ -11,16 +10,14 @@ import {
   selectHighlightStep,
   selectFakeColsLen,
   selectCipherType,
-  selectVisualStep,
   selectEngineSteps,
   selectCurrentMatrixValue,
   selectKeyRaw,
   selectChainXorKey,
 } from './../store/selectors/stepInfoSelector.js'
-import { setVisualStep, setActiveStep, setPlainText, setHighlightStep, setCurrentStep, setKeyRaw, setHexText, setColsLen, setRowsLen, setFakeColsLen, setCipherType, setEngineSteps, resetStepInfo, setChainXorKey} from './../store/reducers/stepInfoReducer'
+import {setActiveStep, setPlainText, setHighlightStep, setCurrentStep, setKeyRaw, setHexText, setRowsLen, setFakeColsLen, setCipherType, setEngineSteps, resetStepInfo, setChainXorKey} from './../store/reducers/stepInfoReducer'
 import { BiSolidRightArrow } from "react-icons/bi";
 import { BiSolidLeftArrow } from "react-icons/bi";
-import { div } from 'framer-motion/client';
 
 export default function StepController() {
   const steps = [
@@ -78,7 +75,7 @@ export default function StepController() {
   const plainText = useSelector(selectPlainText)
 
   const [raw, setRaw] = useState('');
-  const [formatted, setFormatted] = useState('');
+  // const [formatted, setFormatted] = useState('');
 
   const highlightStep = useSelector(selectHighlightStep)
 
@@ -105,46 +102,46 @@ export default function StepController() {
   };
 
 
-  function keyToNumberArray(key) {
-    const chars = key.split('');
+  // function keyToNumberArray(key) {
+  //   const chars = key.split('');
 
-    const indexedChars = chars.map((char, idx) => ({ char, idx }));
+  //   const indexedChars = chars.map((char, idx) => ({ char, idx }));
 
-    const sorted = [...indexedChars].sort((a, b) => {
-      if (a.char < b.char) return -1;
-      if (a.char > b.char) return 1;
-      return a.idx - b.idx;
-    });
+  //   const sorted = [...indexedChars].sort((a, b) => {
+  //     if (a.char < b.char) return -1;
+  //     if (a.char > b.char) return 1;
+  //     return a.idx - b.idx;
+  //   });
 
-    const orderMap = new Array(key.length);
-    sorted.forEach((item, i) => {
-      orderMap[item.idx] = i;
-    });
+  //   const orderMap = new Array(key.length);
+  //   sorted.forEach((item, i) => {
+  //     orderMap[item.idx] = i;
+  //   });
 
-    return orderMap;
-  }
+  //   return orderMap;
+  // }
 
 
 
   const [keyDisplay, setKeyDisplay] = useState(false);
 
-  const [activeIndex, setActiveIndex] = useState(0);
+  // const [activeIndex, setActiveIndex] = useState(0);
 
 
-  const pairs = useMemo(() => {
-    const result = [];
+  // const pairs = useMemo(() => {
+  //   const result = [];
 
-    for (let i = 0; i < raw.length; i += 2) {
-      const a = raw[i];
-      const b = raw[i + 1];
+  //   for (let i = 0; i < raw.length; i += 2) {
+  //     const a = raw[i];
+  //     const b = raw[i + 1];
 
-      if (b !== undefined) {
-        result.push(`(${a}-${b})`);
-      }
-    }
+  //     if (b !== undefined) {
+  //       result.push(`(${a}-${b})`);
+  //     }
+  //   }
 
-    return result;
-  }, [raw]);
+  //   return result;
+  // }, [raw]);
 
 
   const [confirmError, setConfirmError] = useState('');
@@ -214,7 +211,7 @@ export default function StepController() {
   }
 
 
-    setFormatted(formatAsPairs(raw));
+    // setFormatted(formatAsPairs(raw));
     setKeyDisplay(true);
     dispatch(setKeyRaw(raw))
 
@@ -273,12 +270,12 @@ function createEngineStepsFromRaw(raw, cipherType = 'classic') {
 }
 
   const [showKeyError, setShowKeyError] = useState(false)
-  const [showPlainTextError, setShowPlainTextError] = useState(false)
+  // const [showPlainTextError, setShowPlainTextError] = useState(false)
   const [keyButtonDisabled, setKeyButtonDisabled] = useState(false)
 
   const handlePrevious = () => {
-    let canProceed = true;
-    let errorMessage = "";
+    // let canProceed = true;
+    // let errorMessage = "";
 
 
     if(activeStep === 3){
@@ -342,14 +339,14 @@ function createEngineStepsFromRaw(raw, cipherType = 'classic') {
 
 
 
-  function stringToHex(str) {
-    let hex = '';
-    for (let i = 0; i < str.length; i++) {
-      hex += str.charCodeAt(i).toString(16).padStart(2, '0');
-    }
-    console.log(hex);
-    return hex;
-  }
+  // function stringToHex(str) {
+  //   let hex = '';
+  //   for (let i = 0; i < str.length; i++) {
+  //     hex += str.charCodeAt(i).toString(16).padStart(2, '0');
+  //   }
+  //   console.log(hex);
+  //   return hex;
+  // }
 
   const [xorMode, setXorMode] = useState('')
 
